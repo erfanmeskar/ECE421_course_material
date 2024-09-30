@@ -340,50 +340,6 @@
 	\end{equation*}
 	where $\underline{x}$ is the review text, $y$ is the correct label, $\underline{w}$ is the weight vector.
 	\begin{question}
-%		\item \textbf{(Gradient Descent)} Suppose we run stochastic gradient descent once for each of the 4 samples in the order given above, updating the weights according to
-%		\begin{equation*}
-%			\underline{w} \leftarrow \underline{w} - \eta \nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}, y, \underline{w}).
-%		\end{equation*}
-%		
-%		After the updates, what are the weights of the six words (``pretty'', ``good'', ``bad'', ``plot'', ``not'', ``scenery'') that appear in the above reviews?
-%		\begin{itemize}
-%			\item Use $\eta=0.1$ as the step size.
-%			\item Initialize $\underline{w}=[0,0,0,0,0,0]$.
-%			\item The gradient $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}, y, \underline{w})=0$ when margin is exactly 1 (\emph{i.e.}, when $y\underline{w}^\top\phi(\underline{x}) = 1$).
-%		\end{itemize}
-%		
-%		Present your answer as a weight vector that contains a numerical value for each of the tokens in the reviews  (``pretty'', ``good'', ``bad'', ``plot'', ``not'', ``scenery'').
-		%		\begin{answer}
-			%			First, let's formulate the gradient of the loss function.
-			%			\begin{equation*}
-				%				\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}, y, \underline{w}) = \begin{cases}
-					%					-\phi(\underline{x})y, & \text{ if } \underline{w}^\top\phi(\underline{x})y < 1,\\
-					%					\vec{\mathbf{0}}, & \text{ if } \underline{w}^\top\phi(\underline{x})y \geq 1,
-					%				\end{cases}
-				%			\end{equation*}
-			%			where $\vec{\mathbf{0}}$ is a vector of all zeros.
-			%			
-			%			\begin{enumerate}[label=\textbf{Step \arabic* (datapoint $\underline{x}_\arabic*$):}, itemindent=3.5cm]
-				%				\item $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_1, y_1, \underline{w}) = -\phi(\underline{x}_1)y_1$. Therefore, 
-				%				\begin{align*}
-					%					&\underline{w} \leftarrow \underline{w} - 0.1 (-\phi(\underline{x}_1)y_1).
-					%				\end{align*}
-				%				Hence, $\underline{w}=[0, -0.1, 0, 0, -0.1, 0]$.
-				%				\item $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_2, y_2, \underline{w}) = -\phi(\underline{x}_2)y_2$. \begin{align*}
-					%					&\underline{w} \leftarrow \underline{w} - 0.1 (-\phi(\underline{x}_2)y_2).
-					%				\end{align*}
-				%				Hence, $\underline{w}=[-0.1, -0.1, -0.1, 0, -0.1, 0]$.
-				%				\item $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_3, y_3, \underline{w}) = -\phi(\underline{x}_3)y_3$. \begin{align*}
-					%					&\underline{w} \leftarrow \underline{w} - 0.1 (-\phi(\underline{x}_3)y_3).
-					%				\end{align*}
-				%				Hence, $\underline{w}=[-0.1, 0, -0.1, 0.1, -0.1, 0]$.
-				%				\item $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_4, y_4, \underline{w}) = -\phi(\underline{x}_4)y_4$. \begin{align*}
-					%					&\underline{w} \leftarrow \underline{w} - 0.1 (-\phi(\underline{x}_4)y_4).
-					%				\end{align*}
-				%				Hence, $\underline{w}=[0, 0, -0.1, 0.1, -0.1, 0.1]$.
-				%			\end{enumerate}
-			%		\end{answer}
-		
 		\item \textbf{(Linearly Inseparable)} Given the following dataset of reviews:
 		\begin{enumerate}
 			\item $\underline{x}_1:$ bad; label: $(-1)$
