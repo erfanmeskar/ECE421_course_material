@@ -1,0 +1,276 @@
+\documentclass{article}
+
+%Linux command prompt showing package
+\usepackage{listings,menukeys}
+
+%Page format
+\usepackage{pdfpages,fancyhdr}
+\usepackage[margin=1in]{geometry}
+
+%Math packages and custom commands
+\usepackage{algpseudocode,amsmath,framed,tikz,sans,mathtools,amsthm,enumitem,amssymb,dsfont,tabularray,fancyvrb}
+\usepackage[short]{optidef}
+\usepackage[hidelinks]{hyperref}
+\usepackage[table,xcdraw]{xcolor}
+%\usepackage[labelformat=empty]{caption}
+\usepackage[utf8]{inputenc}
+\usetikzlibrary{arrows.meta}
+\usepackage[TABcline]{tabstackengine}
+\TABstackMath
+
+
+\usepackage[table]{xcolor}
+\usepackage{collcell}
+\usepackage{hhline}
+\usepackage{pgf}
+\usepackage{multirow}
+
+\def\colorModel{hsb}
+\newcommand\ColCell[1]{
+	\pgfmathparse{#1<50?1:0}  %Threshold for changing the font color into the cells
+	\ifnum\pgfmathresult=0\relax\color{white}\fi
+	\pgfmathsetmacro\compA{0}      %Component R or H
+	\pgfmathsetmacro\compB{#1/100} %Component G or S
+	\pgfmathsetmacro\compC{1}      %Component B or B
+	\edef\x{\noexpand\centering\noexpand\cellcolor[\colorModel]{\compA,\compB,\compC}}\x #1
+} 
+\newcolumntype{E}{>{\collectcell\ColCell}m{0.4cm}<{\endcollectcell}}  %Cell width
+\newcommand*\rot{\rotatebox{90}}
+
+%Course Info
+\newcommand{\coursenumber}{ECE421}
+\newcommand{\coursename}{\coursenumber: Introduction to Machine Learning}
+\newcommand{\courseyear}{2024}
+\newcommand{\coursesemester}{Fall}
+\newcommand{\coursefullname}{\coursename~---~\coursesemester~\courseyear}
+%Handout Info
+\newcommand{\haname}{}
+\newcommand{\hatypeandnun}{Worksheet 1: Pocket Algorithm and Linear Regression}
+
+
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcommand{\probP}{\mathds{P}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\text{Var}}
+\DeclareMathOperator{\Cov}{\text{Cov}}
+\renewcommand{\arraystretch}{1.3}
+\newcommand{\norm}[2][2]{\| #2\|_{#1}}
+
+\newcommand{\notp}{\neg p}
+\newcommand{\notq}{\neg q}
+\newcommand{\notr}{\neg r}
+\newcommand{\notP}{\neg P}
+\newcommand{\notQ}{\neg Q}
+
+\newcommand{\setD}{\mathcal{D}}
+\newcommand{\setR}{\mathbb{R}}
+\newcommand{\setRd}{\mathbb{R}^d}
+\newcommand{\setRdone}{\mathbb{R}^{d+1}}
+\renewcommand{\vec}[1]{\underline{#1}}
+\newcommand{\vecw}{\vec{w}}
+\newcommand{\vecx}{\vec{x}}
+\newcommand{\vecy}{\vec{y}}
+\newcommand{\vecxn}{\vec{x}_n}
+\newcommand{\setxnyn}{\left\{(\vecxn, y_n)\right\}_{n=1}^{N}}
+
+
+\newcommand{\con}{\wedge}
+\newcommand{\dis}{\vee}
+\newcommand{\false}{\text{F}}
+\newcommand{\terue}{\text{T}}
+
+% verbatim
+\DefineShortVerb{\|}
+\SaveVerb{py}|Python|
+\SaveVerb{num}|NumPy|
+\SaveVerb{sci}|scikit-learn|
+\SaveVerb{tp1}|test_Part1()|
+\SaveVerb{tp2}|test_Part2()|
+
+\definecolor{shadecolor}{gray}{0.9}
+
+\theoremstyle{definition}
+\newtheorem*{answer}{Answer}
+\newcommand{\note}[1]{\noindent{[\textbf{NOTE:} #1]}}
+\newcommand{\hint}[1]{\noindent{[\textbf{HINT:} #1]}}
+\newcommand{\recall}[1]{\noindent{[\textbf{RECALL:} #1]}}
+\newcommand{\remark}[1]{\noindent{[\textbf{REMARK:} #1]}}
+\newcommand{\expect}[1]{\noindent{[\textbf{What we expect:} #1]}}
+\newcommand{\mysolution}[1]{\noindent{\begin{shaded}\textbf{Your Solution:}\ #1 \end{shaded}}}
+
+\newlist{question}{enumerate}{3}
+\setlist[question, 1]{label=\Large \textbf{Q\arabic{questioni}}, leftmargin=\parindent, rightmargin=10pt}
+\setlist[question, 2]{label=\large \textbf{\arabic{questioni}.\alph{questionii}}, leftmargin=15pt, rightmargin=15pt}
+\setlist[question, 3]{label=\textbf{\arabic{questioni}.\alph{questionii}.\kern1.5pt\roman{questioniii}},	leftmargin=30pt, rightmargin=30pt}
+
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+	\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+
+\title{\vspace{-2.5cm}\textbf{\coursefullname}\\\hatypeandnun\\\haname}
+\date{}
+
+%\chead{}
+\rhead{\haname}
+\lfoot{}
+\cfoot{\coursenumber~\coursesemester~\courseyear~---~\hatypeandnun}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\pagestyle{fancy}
+\setlength{\parindent}{0pt}
+
+% NOTE(joe): This environment is credit @pnpo (https://tex.stackexchange.com/a/218450)
+\lstnewenvironment{algorithm}[1][] %defines the algorithm listing environment
+{   
+	\lstset{ %this is the stype
+		mathescape=true,
+		frame=tB,
+		numbers=left, 
+		numberstyle=\tiny,
+		basicstyle=\rmfamily\scriptsize, 
+		keywordstyle=\color{black}\bfseries,
+		keywords={,procedure, div, mod, for, to, input, output, return, datatype, function, in, if, else, foreach, while, begin, end, } %add the keywords you want, or load a language as Rubens explains in his comment above.
+		numbers=left,
+		xleftmargin=.04\textwidth,
+		#1 % this is to add specific settings to an usage of this environment (for instnce, the caption and referable label)
+	}
+}
+{}
+
+\begin{document}
+
+\maketitle
+\vspace*{-2cm}
+\section*{Notation}
+\begin{enumerate}[label=(\alph*)]
+	\item We use a \textbf{underline} to represents \textbf{column vectors}, \textit{e.g.}, $\vec{p} \in \setR^{k}$ represents a column vector with $k$ elements. We adopt the following notations to list the elements of a \textbf{column vector} $$\vec{p} = (p_1, p_2, \ldots, p_k)=\begin{bmatrix}
+		p_1\\
+		p_2\\
+		\vdots\\
+		p_k
+	\end{bmatrix}.$$ Note the usage of parentheses and brackets. The notation with parentheses provides a more compact representation of vectors and optimizes space usage.\\
+	Additionally, \textbf{row vectors} can be represented by $\vec{q}^\top = \left[p_1, p_2, \ldots, p_k\right]$. Note the use of transpose and brackets.\\ Finally, the context and notation should make it clear whether a vector is a column vector or a row vector.
+	\item For all questions we denote the weight vector by $\vecw=(b, w_1, \ldots, w_d) \in \setRdone$, where $b \in \mathbb{R}$ is the bias term, and we denote the example vectors by $\vecx=(1, x_1, x_2, \ldots, x_d) \in \setRdone.$
+	\item In the following, LFD refers to the textbook ``Learning from Data.''
+\end{enumerate}
+ 
+\begin{question}[start=0]
+	\item \textbf{Linear Algebra Review}
+	\begin{question}
+		\item \textbf{(The \( \ell_p \)-norm)} For a real number \( p \geq 1 \), define the \( \ell_p \)-norm of a vector \( \vec{x} \in \mathbb{R}^n \).
+		\item \textbf{(The \( \ell_1 \), \( \ell_2 \), and \( \ell_\infty \)-norm)} Consider the vector $\vecx = (5,2,-3)$. Find the \( \ell_1 \), \( \ell_2 \), and \( \ell_\infty \)-norm of $\vecx$.
+		\item \textbf{(Matrix Multiplication)} Let $\vecw=(w_0, w_1, \ldots, w_d)$ and $\vec{x}_i=(x_{i0}, x_{i1}, \ldots, x_{id})$ for $i \in \{1, 2, \ldots, N\}$. Let   
+		\begin{align*}
+			X &= \begin{bmatrix}
+				x_{10} & x_{11} & \dots & x_{1d} \\
+				x_{20} & x_{21} & \dots & x_{2d} \\
+				\vdots & \vdots & \dots & \vdots \\
+				x_{N0} & x_{N1} & \dots & x_{Nd}
+			\end{bmatrix}=\begin{bmatrix}
+				\vecx_{1}^\top \\
+				\vecx_{2}^\top \\
+				\vdots \\
+				\vecx_{N}^\top
+			\end{bmatrix},\\
+			\vec{\hat{y}} &= \begin{bmatrix}
+				\hat{y}_1 \\
+				\hat{y}_2 \\
+				\vdots \\
+				\hat{y}_N
+			\end{bmatrix} = \begin{bmatrix}
+				\vecw^\top \vecx_{1} \\
+				\vecw^\top \vecx_{2} \\
+				\vdots \\
+				\vecw^\top \vecx_{N}
+			\end{bmatrix}.
+		\end{align*}
+		Show that $\underline{\hat{y}} = X\vecw$.
+	\end{question}
+	\item \textbf{Gradient and Optimization Fundamentals}\\
+	\begin{question}
+		\item \textbf{(Gradient)} Prove that $\nabla_{\!\vecx}(\vec{a}^\top \vecx) = \vec{a}$, and $\nabla_{\!\vecx}(\vec{x}^\top \vec{a}) = \vec{a}$ and $\nabla_{\!\vecx}(\vecx^\top A \vecx)=2A\vecx$, where $\vec{a}$ and $\vecx$ are vectors with $k$ entries and $A$ is a symmetric squared matrix.
+		\item \textbf{(Exercise 3.17 (a),(b) in LFD)} Recall that for a scalar-valued function $f : \mathbb{R}^n \to \mathbb{R}$ and a vector $\underline{p} \in \mathbb{R}^n$, the first-order Taylor series approximation of $f(\vecx + \vec{p})$ is $f(\vecx + \vec{p}) \approx f(\vecx) + \nabla f(\vecx)^\top \vec{p}$. Consider the function $E(u, v) = e^u + e^{2v} + e^{uv} + u^2 - 3uv + 4v^2 - 3u - 5v$, where $u$ and $v$ are scalars.
+		
+		\begin{question}
+			\item Denote by $\hat{E}_1(\Delta u, \Delta v)$ the first-order Taylor series approximation of $E$ at $(u, v) = (0, 0)$. We know that $\hat{E}_1(\Delta u, \Delta v)$ is of the form $\hat{E}_1(\Delta u, \Delta v) = a_u \Delta u + a_v \Delta v + a$. What are the values of $a_u$, $a_v$, and $a$?
+			
+			\item  Minimize $\hat{E}_1$ over all possible $(\Delta u, \Delta v)$ such that $\|(\Delta u, \Delta v)\|_2 = 0.5$, \textit{i.e.},
+			\begin{mini*}
+				{\Delta u, \Delta v}{\hat{E}_1(\Delta u, \Delta v)}
+				{}{}
+				\addConstraint{\|(\Delta u, \Delta v)\|_2}{ = 0.5.}
+			\end{mini*}
+			Recall that the column vector $\begin{bmatrix} \Delta u^* \\ \Delta v^* \end{bmatrix}$ that minimizes $\hat{E}_1$ is in the direction of $-\nabla E(u, v)$, \textit{i.e.}, the negative gradient direction. Compute $\begin{bmatrix} \Delta u^* \\ \Delta v^* \end{bmatrix}$ that minimizes $\hat{E}_1$, and the resulting $\hat{E}_1(\Delta u^*, \Delta v^*)$.
+		\end{question}
+	\end{question}
+	\item \textbf{(Perceptron Learning Algorithm)}	Given a dataset $\setD=\setxnyn$, where $\vecxn \in \setRd$ and $y_n \in \{+1, -1\}$, we wish to train a Perceptron model
+	\begin{equation*}
+		h(\vecx) = \text{sign}\left(b + \sum_{i=1}^d w_i x_i \right) = \text{sign}(\vecw^\top \vecx)
+	\end{equation*}
+	that correctly classifies \textit{all} examples in $\setD$. Consider the perceptron weight update rule
+	\begin{equation*}
+		\vecw(t+1) = \vecw(t) + y_n\vecxn,
+	\end{equation*}
+	where $(\vecxn, y_n)$ is the misclassified datapoint after iteration $t$. This weight update rule moves the weights in the direction of classifying examples correctly. To see
+	this, show the following.
+	\begin{question}
+		\item If $\vecx(t)$ is misclassified by $\vecw(t)$, show that $y_n\vecw^\top(t)\vecxn < 0$.
+		\item Use the equation for $\vecw(t+1)$ to show that $y_n\vecw^\top(t+1)\vecxn > y_n\vecw^\top(t)\vecxn$.
+		\item Argue that the weight update from $\vecw(t)$ to $\vecw(t+1)$ is a move ``in the right direction."
+	\end{question}
+	\remark{Problem 1.3 in LFD, page 33, shows steps towards a rigorous proof of convergence of the Perceptron algorithm. Feel free to attempt solving this problem on your own. This is an optional exercise.}
+	\item \textbf{(Linear Regression)} Given a dataset $\setD = \setxnyn$, where $\vecxn \in \setRd$ and $y_n \in \setR$, we wish to train a linear regression model
+	\begin{equation*}
+		h(x) = b + \sum_{i=1}^d w_i x_i = w^\top x.
+	\end{equation*}
+	
+	The in-sample error associated with the linear regression model is
+	\begin{equation}\label{eq_form1}
+		E_{\text{in}}(w) = \frac{1}{2N} \sum_{n=1}^N (\vecw^\top \vecx_n - y_n)^2.
+	\end{equation}
+	
+	Define the data matrix $X$ and target vector $\vec{y}$ as:
+	\begin{align*}
+		X &= \begin{bmatrix}
+		x_{10} & x_{11} & \dots & x_{1d} \\
+		\vdots & \vdots & \dots & \vdots \\
+		x_{N0} & x_{N1} & \dots & x_{Nd}
+	\end{bmatrix}=\begin{bmatrix}
+	\vecx_{1}^\top \\
+	\vdots \\
+	\vecx_{N}^\top
+	\end{bmatrix} \in \setR^{N \times (d+1)},\\
+	\vec{y} &= \begin{bmatrix}
+		y_1 \\
+		\vdots \\
+		y_N
+	\end{bmatrix}\in \setR^{N}.
+\end{align*}
+where $\vecx_{i} = (x_{i0}, x_{i1}, \ldots, x_{id})$ and $x_{i0}=1$ for all $i \in \{1, 2, \ldots, N\}$.
+	\begin{question}
+		\item Show that the in-sample error can be written as:
+		\begin{equation}\label{eq_form2}
+			E_{\text{in}}(\vecw) = \frac{1}{2N} \|X\vecw - \vecy\|_2^2 = \frac{1}{2N}\left(\vecw^\top X^\top X \vecw - 2\vecw^\top X^\top \vecy + \|\vecy\|_2^2\right).
+		\end{equation}
+
+		\item Find the expressions for the gradient of~\eqref{eq_form1} and~\eqref{eq_form2} with respect to $\vecw$. Verify that the gradients of the two forms are equivalent.
+		
+		\item Suppose $X^\top X$ is invertible. Let $\vecw^\star = (X^\top X)^{-1} X^\top \vecy$. Show that $E_{\text{in}}(\vecw)$ can be decomposed as:
+		\begin{equation*}
+		E_{\text{in}}(\vecw) = \frac{1}{2N}\left(\|X \vecw - \vecy_{\text{ls}}\|_2^2 + \|\vecy - \vecy_{\text{ls}}\|_2^2\right),
+		\end{equation*}
+		where $\vecy_{\text{ls}} = X \vecw^\star$.
+		
+		\item Use the result in (c) to show that the least-squares solution is $\vecw^\star = (X^\top X)^{-1} X^\top \vecy$. Explain geometrically why $$(X \vecw - \vecy_{\text{ls}})^\top (\vecy - \vecy_{\text{ls}}) = 0.$$
+	\end{question}
+	
+	
+\end{question}
+\end{document}

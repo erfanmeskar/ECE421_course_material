@@ -1,0 +1,503 @@
+\documentclass{article}
+
+%Linux command prompt showing package
+\usepackage{listings,menukeys}
+
+%Page format
+\usepackage{pdfpages,fancyhdr}
+\usepackage[margin=1in]{geometry}
+
+%Math packages and custom commands
+\usepackage{algpseudocode,amsmath,framed,tikz,sans,mathtools,amsthm,enumitem,amssymb,dsfont,tabularray,fancyvrb}
+\usepackage[short]{optidef}
+\usepackage[hidelinks]{hyperref}
+\usepackage[table,xcdraw]{xcolor}
+%\usepackage[labelformat=empty]{caption}
+\usepackage[utf8]{inputenc}
+\usetikzlibrary{arrows.meta}
+\usepackage[TABcline]{tabstackengine}
+\TABstackMath
+
+
+\usepackage[table]{xcolor}
+\usepackage{collcell}
+\usepackage{hhline}
+\usepackage{pgf}
+\usepackage{multirow}
+
+\def\colorModel{hsb}
+\newcommand\ColCell[1]{
+	\pgfmathparse{#1<50?1:0}  %Threshold for changing the font color into the cells
+	\ifnum\pgfmathresult=0\relax\color{white}\fi
+	\pgfmathsetmacro\compA{0}      %Component R or H
+	\pgfmathsetmacro\compB{#1/100} %Component G or S
+	\pgfmathsetmacro\compC{1}      %Component B or B
+	\edef\x{\noexpand\centering\noexpand\cellcolor[\colorModel]{\compA,\compB,\compC}}\x #1
+} 
+\newcolumntype{E}{>{\collectcell\ColCell}m{0.4cm}<{\endcollectcell}}  %Cell width
+\newcommand*\rot{\rotatebox{90}}
+
+%Course Info
+\newcommand{\coursenumber}{ECE421}
+\newcommand{\coursename}{\coursenumber: Introduction to Machine Learning}
+\newcommand{\courseyear}{2024}
+\newcommand{\coursesemester}{Fall}
+\newcommand{\coursefullname}{\coursename~---~\coursesemester~\courseyear}
+%Handout Info
+\newcommand{\haname}{}
+\newcommand{\hatypeandnun}{Worksheet 3: Gradient Descent, Multi-class Logistic Regression, Regularized Regression Model}
+
+
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcommand{\probP}{\mathds{P}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\text{Var}}
+\DeclareMathOperator{\Cov}{\text{Cov}}
+\renewcommand{\arraystretch}{1.3}
+\newcommand{\norm}[2][2]{\| #2\|_{#1}}
+
+\newcommand{\notp}{\neg p}
+\newcommand{\notq}{\neg q}
+\newcommand{\notr}{\neg r}
+\newcommand{\notP}{\neg P}
+\newcommand{\notQ}{\neg Q}
+
+\newcommand{\setD}{\mathcal{D}}
+\newcommand{\setR}{\mathbb{R}}
+\newcommand{\setRd}{\mathbb{R}^d}
+\newcommand{\setRdone}{\mathbb{R}^{d+1}}
+\renewcommand{\vec}[1]{\underline{#1}}
+\newcommand{\vecw}{\vec{w}}
+\newcommand{\vecx}{\vec{x}}
+\newcommand{\vecy}{\vec{y}}
+\newcommand{\vecxn}{\vec{x}_n}
+\newcommand{\setxnyn}{\left\{(\vecxn, y_n)\right\}_{n=1}^{N}}
+
+
+\newcommand{\con}{\wedge}
+\newcommand{\dis}{\vee}
+\newcommand{\false}{\text{F}}
+\newcommand{\terue}{\text{T}}
+
+% verbatim
+\DefineShortVerb{\|}
+\SaveVerb{py}|Python|
+\SaveVerb{num}|NumPy|
+\SaveVerb{sci}|scikit-learn|
+\SaveVerb{tp1}|test_Part1()|
+\SaveVerb{tp2}|test_Part2()|
+
+\definecolor{shadecolor}{gray}{0.9}
+
+\theoremstyle{definition}
+\newtheorem*{answer}{Answer}
+\newcommand{\note}[1]{\noindent{[\textbf{NOTE:} #1]}}
+\newcommand{\hint}[1]{\noindent{[\textbf{HINT:} #1]}}
+\newcommand{\recall}[1]{\noindent{[\textbf{RECALL:} #1]}}
+\newcommand{\remark}[1]{\noindent{[\textbf{REMARK:} #1]}}
+\newcommand{\expect}[1]{\noindent{[\textbf{What we expect:} #1]}}
+\newcommand{\mysolution}[1]{\noindent{\begin{shaded}\textbf{Your Solution:}\ #1 \end{shaded}}}
+
+\newlist{question}{enumerate}{3}
+\setlist[question, 1]{label=\Large \textbf{Q\arabic{questioni}}, leftmargin=\parindent, rightmargin=10pt}
+\setlist[question, 2]{label=\large \textbf{\arabic{questioni}.\alph{questionii}}, leftmargin=15pt, rightmargin=15pt}
+\setlist[question, 3]{label=\textbf{\arabic{questioni}.\alph{questionii}.\kern1.5pt\roman{questioniii}},	leftmargin=30pt, rightmargin=30pt}
+
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+	\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+
+\title{\vspace{-2.5cm}\textbf{\coursefullname}\\\hatypeandnun\\\haname}
+\date{}
+
+%\chead{}
+\rhead{\haname}
+\lfoot{}
+\cfoot{\coursenumber~\coursesemester~\courseyear~---~\hatypeandnun}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\pagestyle{fancy}
+\setlength{\parindent}{0pt}
+
+% NOTE(joe): This environment is credit @pnpo (https://tex.stackexchange.com/a/218450)
+\lstnewenvironment{algorithm}[1][] %defines the algorithm listing environment
+{   
+	\lstset{ %this is the stype
+		mathescape=true,
+		frame=tB,
+		numbers=left, 
+		numberstyle=\tiny,
+		basicstyle=\rmfamily\scriptsize, 
+		keywordstyle=\color{black}\bfseries,
+		keywords={,procedure, div, mod, for, to, input, output, return, datatype, function, in, if, else, foreach, while, begin, end, } %add the keywords you want, or load a language as Rubens explains in his comment above.
+		numbers=left,
+		xleftmargin=.04\textwidth,
+		#1 % this is to add specific settings to an usage of this environment (for instnce, the caption and referable label)
+	}
+}
+{}
+
+\begin{document}
+
+\maketitle
+\vspace*{-2cm}
+\begin{question}[start=0]
+	\item \label{q0}\textbf{(Matrix Decomposition Primer)} The singular value decomposition is frequently used as part of unsupervised learning algorithms. In particular, the SVD forms the basis of an algorithm called principal components analysis (PCA), which reduces data dimensions such that the reduced data still contains the maximum amount of variability given the number of reduced dimensions. The reduction axes picked by PCA directly correspond to the singular vectors identified by the singular value decomposition. In the following questions, we review matrix decomposition. \\\note{Your TAs won't review~\ref{q0} during the tutorial session. Please review your linear algebra notes/references if you are struggling with the following questions.}
+	\begin{question}
+		\item \textbf{(Eigen-based Decomposition)} For a square diagonalizable matrix $A \in \mathbb{R}^{n \times n}$ the eigendecomposition is given by $A = Q \Lambda Q^{-1}$, where $Q \in \mathbb{R}^{n \times n}$ is a square matrix that contains the eigenvectors $\underline{q}_i \in \mathbb{R}^{n}$ as columns, and $\Lambda$ is a diagonal matrix\footnote{A matrix $M$ is called diagonal if all the entries outside of its main diagonal are $0$. The main diagonal is the top-left to bottom-right diagonal.} whose entries correspond to the eigenvalues of the respective eigenvectors from $Q$. In particular $\Lambda_{ii} = \lambda_i$ is the eigenvalue associated with eigenvector $\underline{q}_i$.
+		\footnote{A non-zero vector $\underline{v} \in \mathbb{R}^n$ is called an eigenvector of a square diagonalizable matrix $A \in \mathbb{R}^{n \times n}$ if, for a scalar $\lambda \in \mathbb{R}$ it satisfies $A\underline{v} = \lambda \underline{v}$. Intuitively speaking, an eigenvector $\underline{v}$ is a vector which, under the transformation applied by $A$, is only scaled in its magnitude. In particular, such vectors $\underline{v}$ stay on their own span and are only elongated or shrinked. The degree of change in magnitude inflicted by $A$ can be summarized in a single scalar $\lambda$, which is the eigenvalue corresponding to $\underline{v}$. The set of all eigenvalue-eigenvector combinations can be computed by solving for the characteristic polynomial yielded by $det(A - \lambda I) = 0$.}\\
+
+		Compute the characteristic polynomial of $A = \begin{bmatrix}
+			4 & 0 & -2 \\
+			1 & 3 & -2 \\
+			1 & 2 & -1
+		\end{bmatrix}$ and determine its eigenvalues and eigenvectors. Then, find the eigendecomposition of $A$.
+		\item \textbf{(Singular Value Decomposition)} The Singular Value Decomposition (SVD) generalizes the concepts from the eigendecomposition to general matrices $A \in \mathbb{R}^{m \times n}$ by decomposing it as $A = U \Sigma V^\top$, where, $U \in \mathbb{R}^{m \times m}$ is an orthogonal matrix\footnote{A square matrix $M$ is called orthogonal if $MM^\top = M^\top M = I$.}, $\Sigma \in \mathbb{R}^{m \times n}$ is a diagonal matrix, and $V \in \mathbb{R}^{n \times n}$ is an orthogonal matrix.\\
+		Derive the singular value decomposition of $A = \begin{bmatrix}
+			3 & 2 & 2\\
+			2 & 3 & -2
+		\end{bmatrix}$ with following steps.\footnote{A nice visualization of SVD can be found here: https://youtu.be/vSczTbgc8Rc?si=iIYcflhGdcdYV2bv}
+		\begin{question}
+			\item Compute $A^\top A$, yielding a square symmetric matrix.
+			\item Find the eigenvalues for $A^\top A$.
+			\item Find the eigenvectors for $A^\top A$.
+			\item Normalize the eigenvectors of $A^\top A$ to get $V$.
+			\item Find $U$ using the normalized eigenvectors of $V$ where $\underline{u}_i = \frac{1}{\sigma_i} A \underline{v}_i$.
+		\end{question}
+	\end{question}
+
+	
+%	\item \textbf{(Lack of Optimality of $\kappa$-means)} Construct an analytical demonstration that $\kappa$-means might converge to a solution that is not globally optimal. Consider the case where $\kappa = 2$ and the dataset is made up of 4 points in $\mathbb{R}$ as follows: 
+%	\[
+%	x^{(1)} = 1, \quad x^{(2)} = 2, \quad x^{(3)} = 3, \quad x^{(4)} = 4.
+%	\]
+%	Initialize $\kappa$-means with the centroids $\mu_1 = 2$ and $\mu_2 = 4$. You may assume that if a point $x^{(i)}$ is equally distant to multiple centroids $\mu_k$, the point will be assigned to the centroid with the smallest index, i.e., the smallest $k \in \underset{k}{\arg\min}\left(\|x^{(i)} - \mu_k\|^2\right)$.
+	
+	\item \textbf{(Regularized Linear Regression)} Many machine learning algorithms use $\ell_p$ norms to either
+	\begin{itemize}
+		\item measure the distance between points in a high-dimensional data space (\textit{e.g.}, $k$-nearest neighbor classification); or
+		\item bound the magnitude of a vector to a specific value (\textit{e.g.}, regularization in linear regression).
+	\end{itemize}
+	In this question, you will train a regularized linear regression model with an $\ell_2$ regularization penalty.\\
+	
+	You are given a dataset $\mathcal{D} = \{(\underline{x}_n, y_n)\}_{n=1}^N$, where $\underline{x}_n \in \mathbb{R}^{d+1}, d \geq 1$, and $y_n \in \{+1,-1\}$. We would like to train a regularized linear regression model, where the mean squared loss is augmented with an $\ell_2$ regularization penalty $\|\underline{w}\|_2^2$ on the weight parameter $\underline{w}  \in \mathbb{R}^{d+1}$, \textit{i.e.},
+	\begin{equation*}
+		E_{\text{in}}(\underline{w}) = \frac{1}{2N} \sum_{n=1}^N\left(\underline{w}^\top \underline{x}_n - y_n\right)^2 + \frac{\lambda}{2}\|\underline{w}\|_2^2 = \frac{1}{2N} \|X\underline{w} - \underline{y}\|_2^2 + \frac{\lambda}{2}\|\underline{w}\|_2^2.
+	\end{equation*} 
+		where $\lambda > 0$ is a hyperparameter controlling the penalty, and the data matrix $X$ and target vector $\vec{y}$ are defined as $X = \begin{bmatrix}
+			\vecx_{1}^\top \\
+			\vdots \\
+			\vecx_{N}^\top
+		\end{bmatrix} \in \setR^{N \times (d+1)}$, and $\vec{y} = \begin{bmatrix}
+		y_1 \\
+		\vdots \\
+		y_N
+		\end{bmatrix}\in \setR^{N}$.
+		\begin{question}
+			\item \label{q}Prove that all eigenvalues of $X^\top X$ are non-negative.\\\hint{An $n \times n$ real matrix $M$ is is said to be \textbf{positive-semidefinite} if $\underline{z}^\top M \underline{z} \geq 0$, for any non-zero $\underline{z} \in \mathbb{R}^n$. One can show that $M \in \mathbb{R}^{n \times n}$ is positive-semidefinite \textbf{if and only if} all of its eigenvalues are non-negative. So, to prove that all eigenvalues of $X^\top X$ are non-negative, it suffices to prove that $\underline{z}^\top X^\top X \underline{z} \geq 0$ for any non-zero vector $\underline{z}$.}
+			\begin{answer}
+				It suffices to prove that $\underline{z}^\top X^\top X \underline{z} \geq 0$ for any non-zero vector $\underline{z}$. Observe that $$\underline{z}^\top X^\top X \underline{z} = \|X \underline{z}\|_2^2 \geq 0.$$
+			\end{answer}
+			\item \label{qq}Demonstrate that matrix $X^\top X + \lambda N  I$, where $I$ is the identity matrix, is invertible by proving that none of its eigenvalues are zero.\\\hint{Assume $\underline{v}$ is an eigenvector of $X^\top X$ with corresponding eigenvalue $\mu$. In~\ref{q}, you proved that $\mu \geq 0$. Now, show that $\underline{v}$ is also an eigenvector of $X^\top X + \lambda N  I$ and find its corresponding eigenvalue.}
+			\begin{answer}
+				Assume an arbitrary eigenvector of $X^\top X$, $\underline{v}$, and its corresponding eigenvalue $\mu$. Therefore, $X^\top X \underline{v} = \mu \underline{v}$. By~\ref{q}, $\mu \geq 0$. Observe that $(X^\top X + \lambda N  I) \underline{v} = X^\top X \underline{v} + \lambda N  I \underline{v} = \mu \underline{v} + N \underline{v} = (\mu + N) \underline{v}$. Hence, $\underline{v}$ is the eigenvector of $(X^\top X + \lambda N  I)$ and its corresponding eigenvalue is $(\mu + N) > 0$. Thus, all the eigenvalues of $(X^\top X + \lambda N  I)$ are non-zero.
+			\end{answer}
+			\item Using the invertibility of matrix $X^\top X + \lambda N  I$, find an analytical solution for $\underline{w}^\star = \underset{\underline{w}}{\arg \min}~E_{\text{in}}(\underline{w})$. Congratulations! You have trained a regularized linear regression model with an $\ell_2$ regularization penalty.
+			\begin{answer}
+				As $E_{\text{in}}(\underline{w})$ is a convex function, $\nabla_{\!\underline{w}}E_{\text{in}}(\underline{w}^\star) = 0$. Note that 
+				\begin{align*}
+					\nabla_{\!\underline{w}}E_{\text{in}}(\underline{w})  &= \nabla_{\!\underline{w}}(\frac{1}{2N} (X \underline{w} - \underline{y})^\top (X \underline{w} - \underline{y}) + \frac{\lambda}{2} \underline{w}^\top \underline{w}) =\\
+					&= \frac{1}{2N} \nabla_{\!\underline{w}}\left((X \underline{w} - \underline{y})^\top (X \underline{w} - \underline{y})\right)+\frac{\lambda}{2} \nabla_{\!\underline{w}} \underline{w}^\top \underline{w}\\
+					&= \frac{1}{2N} \nabla_{\!\underline{w}}\left((\underline{w}^\top X^\top  - \underline{y}^\top) (X \underline{w} - \underline{y})\right)+\lambda I \underline{w}\\
+					&= \frac{1}{2N} \nabla_{\!\underline{w}}\left(\underline{w}^\top X^\top X \underline{w} - 2\underline{w}^\top X^\top \underline{y}  + \underline{y}^\top \underline{y}\right)+\lambda I \underline{w}\\
+					&= \frac{1}{2N} \left(2 X^\top X \underline{w} - 2 X^\top \underline{y}\right)+\lambda I \underline{w}\\
+					&= \frac{1}{N} \left((X^\top X + N \lambda I) \underline{w} - X^\top \underline{y}\right).
+				\end{align*}
+				Therefore, $\nabla_{\!\underline{w}}E_{\text{in}}(\underline{w}^\star) = \frac{1}{N} \left((X^\top X + N \lambda I) \underline{w}^\star - X^\top \underline{y}\right) = 0 \Rightarrow \underline{w}^\star = (X^\top X + N \lambda I)^{-1} X^\top \underline{y}$, as by~\ref{qq}, $(X^\top X + N \lambda I)$ is invertible.
+			\end{answer}
+		\end{question}
+		\item \textbf{(Hinge Loss and Stochastic Gradient Descent)} Consider the same \textit{Rotten Tomatoes} reviews in the previous worksheet:
+		\begin{quote}
+			\textbf{Panos Kotzathanasis} (Asian Movie Plus): "Perfect Blue" is an artistic and technical masterpiece; however, what is of outmost importance is the fact that Satoshi Kon never deteriorate from the high standards he set here, in the first project that was entirely his own.\\
+			
+			\textbf{Derek Smith} (Cinematic Reflections): [An] nime thriller [that] often plays as an examination of identity and celebrity, but ultimately gets so lost in its own complex structure that it doesn't end up saying much at all.
+		\end{quote}
+		
+		Rotten Tomatoes has classified these reviews as ``positive'' and ``negative,'' respectively.\\
+		
+		In this assignment, you will create a simple text classification system that can perform this task automatically. similar to the previous worksheet, we'll warm up with the following set of four mini-reviews, each labeled positive $(+1)$ or negative $(-1)$:
+		\begin{enumerate}
+			\item $\underline{x}_1:$ not good; label: $(-1)$
+			\item $\underline{x}_2:$ pretty bad; label: $(-1)$
+			\item $\underline{x}_3:$ good plot; label: $(+1)$
+			\item $\underline{x}_4:$ pretty scenery; label: $(+1)$
+		\end{enumerate}
+		
+		Each review $\underline{x}$ is mapped onto a feature vector $\phi(\underline{x})$, which maps each word to the number of occurrences of that word in the review and adds a $1$ to account for bias. For example, the second review maps to the (sparse) feature vector $\phi(\underline{x}_2)=\{\textbf{extra added 1}:1, \textbf{pretty}:1,\textbf{bad}:1\}$. The hinge loss for a single datapoint is defined as
+		\begin{equation*}
+			L_{\text{hinge}}(\underline{x}, y,\underline{w})= \max\{0, 1-y\underline{w}^\top\phi(\underline{x})\},
+		\end{equation*}
+		where $\underline{x}$ is the review text, $y$ is the correct label, $\underline{w}$ is the weight vector.\\
+
+		Suppose we run \textbf{stochastic gradient descent} once for each of the 4 samples in the order given above, updating the weights according to
+		\begin{equation*}
+			\underline{w} \leftarrow \underline{w} - \epsilon \nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}, y, \underline{w}).
+		\end{equation*}
+		
+		After the updates, what are the bias and the weights of the six words (``pretty'', ``good'', ``bad'', ``plot'', ``not'', ``scenery'') that appear in the above reviews?
+		\begin{itemize}
+			\item Use $\epsilon=0.1$ as the step size.
+			\item Initialize $\underline{w}=[0,0,0,0,0,0,0]$.
+			\item The gradient $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}, y, \underline{w})=\underline{0}$ when margin is exactly $1$ (\emph{i.e.}, when $y\underline{w}^\top\phi(\underline{x}) = 1$).
+		\end{itemize}
+		
+		Present your answer as a weight vector that contains a numerical value for each of the tokens in the reviews  (``extra added 1'', ``pretty'', ``good'', ``bad'', ``plot'', ``not'', ``scenery'').
+		\begin{answer}
+			First, let's formulate the gradient of the loss function.
+			\begin{equation*}
+				\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}, y, \underline{w}) = \begin{cases}
+						-\phi(\underline{x})y, & \text{ if } \underline{w}^\top\phi(\underline{x})y < 1,\\
+						\vec{0}, & \text{ if } \underline{w}^\top\phi(\underline{x})y \geq 1.
+					\end{cases}
+				\end{equation*}
+			
+			\begin{enumerate}[label=\textbf{Step \arabic* (datapoint $\underline{x}_\arabic*$):}, itemindent=3.5cm]
+				\item Observe that $\underline{w}^\top\phi(\underline{x}_1)y_1=0$ and $y_1=-1$. Thus,  $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_1, y_1, \underline{w}) = \phi(\underline{x}_1)$. Therefore, 
+				\begin{align*}
+						&\underline{w} \leftarrow \underline{w} - 0.1 \phi(\underline{x}_1).
+					\end{align*}
+				Hence, $\underline{w}=[-0.1, 0, -0.1, 0, 0, -0.1, 0]$.
+				\item Observe that $\underline{w}^\top\phi(\underline{x}_2)y_2=0.1$ and $y_1=-1$. Thus, $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_2, y_2, \underline{w}) = \phi(\underline{x}_2)$. Therefore,
+				\begin{align*}
+					&\underline{w} \leftarrow \underline{w} - 0.1 \phi(\underline{x}_2).
+				\end{align*}
+				Hence, $\underline{w}=[-0.2, -0.1, -0.1, -0.1, 0, -0.1, 0]$.
+				\item Observe that $\underline{w}^\top\phi(\underline{x}_3)y_3= -0.3$ and $y_3=1$. Thus, $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_3, y_3, \underline{w}) = -\phi(\underline{x}_3)$. \begin{align*}
+						&\underline{w} \leftarrow \underline{w} + 0.1\phi(\underline{x}_3).
+					\end{align*}
+				Hence, $\underline{w}=[-0.1, -0.1, 0, -0.1, 0.1, -0.1, 0]$.
+				\item Observe that $\underline{w}^\top\phi(\underline{x}_4)y_4= -0.2$ and $y_4=1$. Thus, $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_4, y_4, \underline{w}) = -\phi(\underline{x}_4)$. \begin{align*}
+						&\underline{w} \leftarrow \underline{w} + 0.1 \phi(\underline{x}_4).
+					\end{align*}
+				Hence, $\underline{w}=[0, 0, 0, -0.1, 0.1, -0.1, 0.1]$.
+			\end{enumerate}
+			\end{answer}
+
+%	\item \textbf{(Multiclass Perceptrons)} Similar to multi-class logistic regression, we can extend Perceptrons to multi-class classification problems. You are given a dataset $\mathcal{D} = \{(\underline{x}_n, y_n)\}_{n=1}^N$, where $\underline{x}_n \in \mathbb{R}^{d+1}, d \geq 1$, and $y_n \in \{1, 2, \ldots, c\}$. A multi-class Perceptron model uses a hypothesis sets $\mathcal{H}$, where each function $h$ has the form
+%	\begin{align*}
+%		h(\underline{x}) = \underset{i\in\{1,\ldots,c\}}{\arg \max}~~\underline{w}(i)^\top \underline{x}.
+%	\end{align*}
+%%	The multi-class Perceptron Learning Algorithm is as follows:
+%%	\begin{algorithmic}
+%%		\State initialize $\underline{w}(1), \underline{w}(2), \ldots, \underline{w}(c)$
+%%		\If{$i\geq 5$} 
+%%		\State $i \gets i-1$
+%%		\Else
+%%		\If{$i\leq 3$}
+%%		\State $i \gets i+2$
+%%		\EndIf
+%%		\EndIf 
+%%	\end{algorithmic}	
+%	Consider the problem of classifying text items into three topic areas: AI, Medicine,
+%	and Hiking. We have four training examples:
+%	\begin{enumerate}[label=$\mathbf{e_\arabic*}$:]
+%		\item Hill climbing informs gradient descent. (AI)
+%		\item Alzheimers is a gradual descent. (Medicine)
+%		\item Hill climbing helps. (Medicine)
+%		\item Gorp helps hill climbing. (Hiking)
+%	\end{enumerate}
+%	\begin{question}
+%		\item Convert the four training examples into the (vector, category) form indicated by the table. (You'll use the reference vocabulary given in the table.)
+%		
+%		\newcommand{\be}{\mathbf{e}}
+%		\newcommand{\bWH}{\mathbf{W}_{\text{H}}}
+%		\newcommand{\bWA}{\mathbf{W}_{\text{A}}}
+%		\newcommand{\bWM}{\mathbf{W}_{\text{M}}}
+%		\newcommand{\bW}{\mathbf{W}}
+%		\begin{tabular}{|l|l|l|l|l|l|l|l|l||l|}
+%			\hline
+%			$\mathbf{e_i}$ & Alzheimers & climbing & descent & gorp & gradient & gradual & helps & hill & (category)\\\hline
+%			$\mathbf{e_1}$ &   &   &   &   &   &   &   &   & \\\hline
+%			$\mathbf{e_2}$ &   &   &   &   &   &   &   &   & \\\hline
+%			$\mathbf{e_3}$ &   &   &   &   &   &   &   &   & \\\hline
+%			$\mathbf{e_4}$ &   &   &   &   &   &   &   &   & \\\hline
+%		\end{tabular}
+%		%		\begin{answer}
+%			%			~
+%			%			
+%			%			\begin{tabular}{|l|l|l|l|l|l|l|l|l||l|}
+%				%				\hline
+%				%				$\mathbf{e_i}$ & Alzheimers & climbing & descent & gorp & gradient & gradual & helps & hill & (category)\\\hline
+%				%				$\mathbf{e_1}$ &   	0		&   1      &	1    &	  0  & 	 1     & 0	     & 	0     &  1   & AI\\\hline
+%				%				$\mathbf{e_2}$ &   	1		&   0	   &	1    &	 0   & 	0       & 	1    & 	 0    & 0     & Medicine\\\hline
+%				%				$\mathbf{e_3}$ &   	0		&  1	   &	0     &	0    & 	 0      & 0	     & 	   1 &  1   & Medicine\\\hline
+%				%				$\mathbf{e_4}$ &   	0		&  1	   &	 0    &	  1 & 	  0     & 0	     & 	1    &    1 & Hiking\\\hline
+%				%			\end{tabular}
+%			%		\end{answer}
+%		\item We will start with a weight vector for each of the $3$ categories ($\bWA$ for AI, $\bWM$ for Medicine, and $\bWH$ for Hiking), with all weights $0$ except $1$ for the bias on the AI vector.
+%		
+%		\begin{tabular}{|l|l|l|l|l|l|l|l|l||l|}
+%			\hline
+%			$\bW$ & bias & Alzheimers & climbing & descent & gorp & gradient & gradual & helps & hill \\\hline
+%			$\bWA$ & 1  & 0  & 0  & 0  & 0  & 0  & 0  & 0  &0 \\\hline
+%			$\bWM$ &  0 &  0 &  0 &  0 &  0 &  0 &  0 &  0 & 0\\\hline
+%			$\bWH$ &  0 & 0  & 0  & 0  & 0  & 0  & 0  & 0  & 0\\\hline
+%		\end{tabular}
+%		
+%		Perform one epoch of training showing the resulting changed vectors whenever there is a change made to a weight vector. When each training example is processed, if any weight vector does not change, do not rewrite that vector. Whenever a vector is updated, write the new vector on its own line below, clearly indicating which category it belongs to. For example, $W_H = \ldots$
+%		%		\begin{answer}
+%			%			~
+%			%					
+%			%			\begin{enumerate}[label=\textbf{Step \arabic* (datapoint $\mathbf{e_\arabic*}$):}, itemindent=3.5cm]
+%				%				\item $\be_1 . \bWA = 1$, $\be_1 . \bWM = 0$, $\be_1 . \bWH = 0$. Hence, it would be correctly classified and the wights won't be updated.
+%				%				\item $\be_2 . \bWA = 1$, $\be_2 . \bWM = 0$, $\be_2 . \bWH = 0$. Hence, it is missclassified as AI instead of Medicine. Therefore,
+%				%				\begin{align*}
+%					%					\bWA \leftarrow \bWA - \be_2,\\
+%					%					\bWM \leftarrow \bWM + \be_2.
+%					%				\end{align*}
+%				%				Thus, the updated weights would be as follows.
+%				%				
+%				%				\begin{tabular}{|l|l|l|l|l|l|l|l|l||l|}
+%					%					\hline
+%					%					$\bW$ & bias & Alzheimers & climbing & descent & gorp & gradient & gradual & helps & hill \\\hline
+%					%					$\bWA$ & 0  & -1  & 0  & -1  & 0  & 0  & -1  & 0  &0 \\\hline
+%					%					$\bWM$ &  1 &  1 &  0 &  1 &  0 &  0 &  1 &  0 & 0\\\hline
+%					%					$\bWH$ &  0 & 0  & 0  & 0  & 0  & 0  & 0  & 0  & 0\\\hline
+%					%				\end{tabular}
+%				%				\item $\be_3 . \bWA = 0$, $\be_3 . \bWM = 1$, $\be_3 . \bWH = 0$. Hence, it would be correctly classified and the wights won't be updated.
+%				%				\item $\be_4 . \bWA = 0$, $\be_4 . \bWM = -3$, $\be_4 . \bWH = 0$. Hence, it is missclassified (we want $\be_4 . \bWH > \be_4 . \bWA$ instead). Therefore,
+%				%				\begin{align*}
+%					%					\bWA \leftarrow \bWA - \be_4,\\
+%					%					\bWH \leftarrow \bWH + \be_4.
+%					%				\end{align*}
+%				%				Thus, the updated weights would be as follows.
+%				%				
+%				%				\begin{tabular}{|l|l|l|l|l|l|l|l|l||l|}
+%					%					\hline
+%					%					$\bW$ & bias & Alzheimers & climbing & descent & gorp & gradient & gradual & helps & hill \\\hline
+%					%					$\bWA$ & -1  & -1  & -1  & -1  & -1  & 0  & -1  & -1  &-1 \\\hline
+%					%					$\bWM$ &  1 &  1 &  0 &  1 &  0 &  0 &  1 &  0 & 0\\\hline
+%					%					$\bWH$ &  1 & 0  & 1  & 0  & 1  & 0  & 0  & 1  & 1\\\hline
+%					%				\end{tabular}
+%				%			\end{enumerate}
+%			%		\end{answer}
+%		\item  Training could take many epochs to converge. See if you can skip the training and manually provide a set of three weight vectors that will correctly handle the training examples.
+%		%		\begin{answer}
+%			%			~
+%			%			
+%			%			\begin{tabular}{|l|l|l|l|l|l|l|l|l||l|}
+%				%				\hline
+%				%				$\bW$ & bias & Alzheimers & climbing & descent & gorp & gradient & gradual & helps & hill \\\hline
+%				%				$\bWA$ & 0  &0  & 0  & 0  & 0  & 2  & 0  & 0  &0 \\\hline
+%				%				$\bWM$ &  0 &  1 &  1 &  0 &  0 &  0 &  0 &  0 & 0\\\hline
+%				%				$\bWH$ &  0 & 0  & 0  & 0  & 2  & 0  & 0  & 0  & 0\\\hline
+%				%			\end{tabular}
+%			%		\end{answer}
+%	\end{question}
+	\item \textbf{(Problem 2, Midterm 2019, Multi-class softmax regression model)}
+	Suppose we use a multi-class softmax regression model to classify input data vectors $\underline{x} \in \mathbb{R}^{d+1}$ with two possible class labels $y \in \{1, 2\}$. Let $\underline{w}(1)$ and $\underline{w}(2)$ be the weight vectors for class 1 and 2, respectively. For any input $\underline{x}$, we hypothesize that the probability of $\underline{x}$ belonging to class $i \in \{1, 2\}$ is
+	\[
+	\probP^{\text{SM}}(y = i\mid \underline{x}) = \frac{\exp(\underline{w}(i)^\top \underline{x})}{\exp(\underline{w}(1)^\top \underline{x}) + \exp(\underline{w}(2)^\top \underline{x})}.
+	\]
+	For a training example $(\underline{x}_n, y_n)$, let the loss function be defined as
+	\[
+	e^{\text{SM}}_{n}(\underline{w}(1), \underline{w}(2)) = -\log(\probP^{\text{SM}}(y_n\mid \underline{x}_n)) = -\log\left[\frac{\exp(\underline{w}(y_n)^\top \underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\right].
+	\]
+	\begin{question}
+		\item Find the gradients of $e^{\text{SM}}_{n}$ with respect to $\underline{w}(1)$ and $\underline{w}(2)$. (Note that you should always consider two possible values of $y_n$).
+		\begin{answer}
+			If $y_n = 1$, 
+			\begin{align*}
+				\nabla_{\!\underline{w}(1)}e^{\text{SM}}_{n}(\underline{w}(1), \underline{w}(2)) &= - \nabla_{\!\underline{w}(1)}\log(\probP^{\text{SM}}(y_n\mid \underline{x}_n)) = - \nabla_{\!\underline{w}(1)} \log\left[\frac{\exp(\underline{w}(1)^\top \underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\right]\\
+				&= - \nabla_{\!\underline{w}(1)} \left(\underline{w}(1)^\top \underline{x}_n - \log\left(\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)\right)\right)\\
+				&= -\underline{x}_n + \frac{\nabla_{\!\underline{w}(1)}\left(\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)\right)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\\
+				&=  -\underline{x}_n + \frac{\exp(\underline{w}(1)^\top\underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\underline{x}_n\\
+				&=  \frac{-\exp(\underline{w}(2)^\top\underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\underline{x}_n.
+			\end{align*}
+			If $y_n = 2$, 
+			\begin{align*}
+				\nabla_{\!\underline{w}(1)}e^{\text{SM}}_{n}(\underline{w}(1), \underline{w}(2)) &= - \nabla_{\!\underline{w}(1)}\log(\probP^{\text{SM}}(y_n\mid \underline{x}_n)) = - \nabla_{\!\underline{w}(1)} \log\left[\frac{\exp(\underline{w}(2)^\top \underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\right]\\
+				&= - \nabla_{\!\underline{w}(1)} \left(\underline{w}(2)^\top \underline{x}_n - \log\left(\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)\right)\right)\\
+				&= \frac{\nabla_{\!\underline{w}(1)}\left(\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)\right)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\\
+				&=  \frac{\exp(\underline{w}(1)^\top\underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\underline{x}_n.
+			\end{align*}
+			
+			Similarly, we can derive $\nabla_{\!\underline{w}(2)}e^{\text{SM}}_{n}(\underline{w}(1), \underline{w}(2))$ as
+			\begin{align*}
+				\nabla_{\!\underline{w}(2)}e^{\text{SM}}_{n}(\underline{w}(1), \underline{w}(2)) = \begin{cases*}
+					\frac{\exp(\underline{w}(2)^\top\underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\underline{x}_n,\text{ if }y_n=1,\\
+					\frac{-\exp(\underline{w}(1)^\top\underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\underline{x}_n,\text{ if }y_n=2.
+				\end{cases*}
+			\end{align*}
+		\end{answer}
+		
+		\item \label{SMtoLR}Suppose instead of the multi-class softmax regression model, we use a binary logistic regression model. For an input $\underline{x} \in \mathbb{R}^{d+1}$, we hypothesize that the probability of $x$ belonging to class 1 is
+		\[
+		\probP^{\text{LR}}(y = 1\mid \underline{x}) = \frac{\exp({\underline{w}^\top \underline{x}})}{1 + \exp{(\underline{w}^\top \underline{x}})}.
+		\]
+		Therefore, $\underline{x}$ belongs to class 2 with probability $\probP^{\text{LR}}(y = 2\mid \underline{x}) = 1 - \probP^{\text{LR}}(y = 1\mid \underline{x})$. For an example $(\underline{x}_n, y_n)$ we define the loss function as
+		\[
+		e^{\text{LR}}_{n}(\underline{w}) = -\log(\probP^{\text{LR}}(y_n\mid \underline{x}_n)).
+		\]
+		Find a relationship between $\underline{w}(1), \underline{w}(2)$ and $\underline{w}$, so that we have
+		\[
+		\probP^{\text{SM}}(y = 1\mid \underline{x}) = \probP^{\text{LR}}(y = 1\mid \underline{x}), \quad \probP^{\text{SM}}(y = 2\mid \underline{x}) = 1 - \probP^{\text{LR}}(y = 1\mid \underline{x}).
+		\]
+		\begin{answer}
+			Let $\underline{w} = \underline{w}(1) - \underline{w}(2)$. Observe that with such $\underline{w}$,
+			\begin{align*}
+				\probP^{\text{LR}}(y = 1\mid \underline{x}) &= \frac{\exp({\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})}{1 + \exp{(\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})}\\
+				&= \frac{\exp({\underline{w}(1)^\top \underline{x}})}{\exp{(\underline{w}(2)^\top \underline{x}}) + \exp{(\underline{w}(1)^\top \underline{x}})} = \probP^{\text{SM}}(y = 1\mid \underline{x}),
+			\end{align*}
+			and 
+			\begin{align*}
+				\probP^{\text{LR}}(y = 2\mid \underline{x}) &= 1 - \frac{\exp({\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})}{1 + \exp{(\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})} = \frac{1}{1 + \exp{(\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})}\\
+				&= \frac{\exp({\underline{w}(2)^\top \underline{x}})}{\exp{(\underline{w}(2)^\top \underline{x}}) + \exp{(\underline{w}(1)^\top \underline{x}})} = \probP^{\text{SM}}(y = 2\mid \underline{x}).
+			\end{align*}
+		\end{answer}
+		\item Given $\underline{w}(1)$, $\underline{w}(2)$ and $\underline{w}$ as described in (b), we apply SGD to separately train the softmax regression model and binary logistic regression model, with constant learning rates $\epsilon^{\text{SM}}$ and $\epsilon^{\text{LR}}$, respectively. For both models, all weights are initialized to zero, and we use the same random seed so that in each iteration of SGD the same random training example is selected. Find a relationship between $\epsilon^{\text{SM}}$ and $\epsilon^{\text{LR}}$, so that $e^{\text{SM}}_{n}(\underline{w}(1), \underline{w}(2))$ and $e^{\text{LR}}_{n}(\underline{w})$ are identical in all iterations of SGD.
+		\begin{answer}
+			Let $\underline{w}_k(1)$ and $\underline{w}_k(2)$ denote the multi-class softmax regression model weight vectors after the $k_{\text{th}}$ iteration of SGD with, and $\underline{w}_k$ denote the binary logistic regression model weight vector after the $k_{\text{th}}$ iteration of SGD. Note that $\underline{w}_0 = \underline{w}_k(1) -\underline{w}_k(2) = \underline{0}$. Thus, by the result from~\ref{SMtoLR}, $e^{\text{LR}}_{n}(\underline{w}_0) = e^{\text{SM}}_{n}(\underline{w}_0(1), \underline{w}_0(2))$ for any $n$. To have $e^{\text{LR}}_{n}(\underline{w}_k) = e^{\text{SM}}_{n}(\underline{w}_k(1), \underline{w}_k(2))$ for any iteration $k \geq 0$, it is enough to set the learning rates $\epsilon^{\text{SM}}$ and $\epsilon^{\text{LR}}$ such that:
+			\begin{quote}
+				``for any datapoint $n$ and any weight vectors $\underline{w}_{t}$, $\underline{w}(1)_{t}$ and $\underline{w}(2)_{t}$, if $\underline{w}_{t} = \underline{w}(1)_{t} - \underline{w}(2)_{t}$ then $\underline{w}_{t+1} = \underline{w}(1)_{t+1} - \underline{w}(2)_{t+1}$.''
+			\end{quote}
+			
+			Assume $\underline{w}_{t} = \underline{w}(1)_{t} - \underline{w}(2)_{t}$. By SGD update rule,
+			\begin{align*}
+				\underline{w}_{t+1} &= \underline{w}_{t} - \epsilon^{\text{LR}} \nabla_{\!\underline{w}}e^{\text{LR}}_{n}(\underline{w}_{t}),\\
+				\underline{w}(1)_{t+1} - \underline{w}(2)_{t+1} &= \underline{w}(1)_{t} - \epsilon^{\text{SM}} \nabla_{\!\underline{w}(1)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t})  - \underline{w}(2)_{t} + \epsilon^{\text{SM}} \nabla_{\!\underline{w}(2)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t})\\
+				&= \underline{w}(1)_{t} - \underline{w}(2)_{t} - \epsilon^{\text{SM}} \left(\nabla_{\!\underline{w}(1)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t}) -  \nabla_{\!\underline{w}(2)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t})\right)\\
+				&= \underline{w}_{t} - \epsilon^{\text{SM}} \left(\nabla_{\!\underline{w}(1)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t}) -  \nabla_{\!\underline{w}(2)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t})\right).
+			\end{align*}
+
+			
+			Therefore, to obtain $\underline{w}_{t+1} = \underline{w}(1)_{t+1} - \underline{w}(2)_{t+1}$, it suffices to have 
+			\begin{align}
+				&\epsilon^{\text{LR}} \nabla_{\!\underline{w}}e^{\text{LR}}_{n}(\underline{w}_{t}) = \epsilon^{\text{SM}} \left(\nabla_{\!\underline{w}(1)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t}) -  \nabla_{\!\underline{w}(2)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t})\right), \forall y_n\in \{1,2\}.\label{eq1}
+			\end{align}
+			
+			Observe that if $y_n=1$.
+			\begin{align*}
+				 \nabla_{\!\underline{w}}e^{\text{LR}}_{n}(\underline{w}_{t}) = \frac{-1}{1 + \exp{(\underline{w}_{t}^\top \underline{x}_{n}})}\underline{x}_{n}=\frac{-1}{1 + \exp{(\left(\underline{w}(1)_{t} - \underline{w}(2)_{t}\right)^\top \underline{x}_{n}})}\underline{x}_{n} &=\frac{-\exp(\underline{w}(2)^\top\underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\underline{x}_n,\\
+				 \nabla_{\!\underline{w}(1)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t}) -  \nabla_{\!\underline{w}(2)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t}) &= \frac{-2\exp(\underline{w}(2)^\top\underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\underline{x}_n.
+			\end{align*}
+			
+			If $y_n=2$.
+			\begin{align*}
+				\nabla_{\!\underline{w}}e^{\text{LR}}_{n}(\underline{w}_{t}) = \frac{1}{1 + \exp{(-\underline{w}_{t}^\top \underline{x}_{n}})}\underline{x}_{n}= \frac{1}{1 + \exp{(\left(\underline{w}(2)_{t} - \underline{w}(1)_{t}\right)^\top \underline{x}_{n}})}\underline{x}_{n} &=\frac{\exp(\underline{w}(1)^\top\underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\underline{x}_n,\\
+				\nabla_{\!\underline{w}(1)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t}) -  \nabla_{\!\underline{w}(2)}e^{\text{SM}}_{n}(\underline{w}(1)_{t}, \underline{w}(2)_{t}) &= \frac{2\exp(\underline{w}(1)^\top\underline{x}_n)}{\exp(\underline{w}(1)^\top\underline{x}_n) + \exp(\underline{w}(2)^\top\underline{x}_n)}\underline{x}_n.
+			\end{align*}
+			
+			Thus, to satisfy~\eqref{eq1}, it suffices to have $\epsilon^{\text{SM}} = \frac{\epsilon^{\text{LR}}}{2}$.
+			
+		\end{answer}
+	\end{question}
+\end{question}
+\end{document}

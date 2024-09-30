@@ -1,0 +1,455 @@
+\documentclass{article}
+
+%Linux command prompt showing package
+\usepackage{listings,menukeys}
+
+%Page format
+\usepackage{pdfpages,fancyhdr}
+\usepackage[margin=1in]{geometry}
+
+%Math packages and custom commands
+\usepackage{algpseudocode,amsmath,framed,tikz,sans,mathtools,amsthm,enumitem,amssymb,dsfont,tabularray,fancyvrb}
+\usepackage[short]{optidef}
+\usepackage[hidelinks]{hyperref}
+\usepackage[table,xcdraw]{xcolor}
+%\usepackage[labelformat=empty]{caption}
+\usepackage[utf8]{inputenc}
+\usetikzlibrary{arrows.meta}
+\usepackage[TABcline]{tabstackengine}
+\TABstackMath
+
+
+\usepackage[table]{xcolor}
+\usepackage{collcell}
+\usepackage{hhline}
+\usepackage{pgf}
+\usepackage{multirow}
+
+\def\colorModel{hsb}
+\newcommand\ColCell[1]{
+	\pgfmathparse{#1<50?1:0}  %Threshold for changing the font color into the cells
+	\ifnum\pgfmathresult=0\relax\color{white}\fi
+	\pgfmathsetmacro\compA{0}      %Component R or H
+	\pgfmathsetmacro\compB{#1/100} %Component G or S
+	\pgfmathsetmacro\compC{1}      %Component B or B
+	\edef\x{\noexpand\centering\noexpand\cellcolor[\colorModel]{\compA,\compB,\compC}}\x #1
+} 
+\newcolumntype{E}{>{\collectcell\ColCell}m{0.4cm}<{\endcollectcell}}  %Cell width
+\newcommand*\rot{\rotatebox{90}}
+
+%Course Info
+\newcommand{\coursenumber}{ECE421}
+\newcommand{\coursename}{\coursenumber: Introduction to Machine Learning}
+\newcommand{\courseyear}{2024}
+\newcommand{\coursesemester}{Fall}
+\newcommand{\coursefullname}{\coursename~---~\coursesemester~\courseyear}
+%Handout Info
+\newcommand{\haname}{}
+\newcommand{\hatypeandnun}{Worksheet 2 Solution: Gradient, Logistic Regression, and Non-linear Transformation}
+
+
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcommand{\probP}{\mathds{P}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\text{Var}}
+\DeclareMathOperator{\Cov}{\text{Cov}}
+\renewcommand{\arraystretch}{1.3}
+\newcommand{\norm}[2][2]{\| #2\|_{#1}}
+
+\newcommand{\notp}{\neg p}
+\newcommand{\notq}{\neg q}
+\newcommand{\notr}{\neg r}
+\newcommand{\notP}{\neg P}
+\newcommand{\notQ}{\neg Q}
+
+\newcommand{\setD}{\mathcal{D}}
+\newcommand{\setR}{\mathbb{R}}
+\newcommand{\setRd}{\mathbb{R}^d}
+\newcommand{\setRdone}{\mathbb{R}^{d+1}}
+\renewcommand{\vec}[1]{\underline{#1}}
+\newcommand{\vecw}{\vec{w}}
+\newcommand{\vecx}{\vec{x}}
+\newcommand{\vecy}{\vec{y}}
+\newcommand{\vecxn}{\vec{x}_n}
+\newcommand{\setxnyn}{\left\{(\vecxn, y_n)\right\}_{n=1}^{N}}
+
+
+\newcommand{\con}{\wedge}
+\newcommand{\dis}{\vee}
+\newcommand{\false}{\text{F}}
+\newcommand{\terue}{\text{T}}
+
+% verbatim
+\DefineShortVerb{\|}
+\SaveVerb{py}|Python|
+\SaveVerb{num}|NumPy|
+\SaveVerb{sci}|scikit-learn|
+\SaveVerb{tp1}|test_Part1()|
+\SaveVerb{tp2}|test_Part2()|
+
+\definecolor{shadecolor}{gray}{0.9}
+
+\theoremstyle{definition}
+\newtheorem*{answer}{Answer}
+\newcommand{\note}[1]{\noindent{[\textbf{NOTE:} #1]}}
+\newcommand{\hint}[1]{\noindent{[\textbf{HINT:} #1]}}
+\newcommand{\recall}[1]{\noindent{[\textbf{RECALL:} #1]}}
+\newcommand{\remark}[1]{\noindent{[\textbf{REMARK:} #1]}}
+\newcommand{\expect}[1]{\noindent{[\textbf{What we expect:} #1]}}
+\newcommand{\mysolution}[1]{\noindent{\begin{shaded}\textbf{Your Solution:}\ #1 \end{shaded}}}
+
+\newlist{question}{enumerate}{3}
+\setlist[question, 1]{label=\Large \textbf{Q\arabic{questioni}}, leftmargin=\parindent, rightmargin=10pt}
+\setlist[question, 2]{label=\large \textbf{\arabic{questioni}.\alph{questionii}}, leftmargin=15pt, rightmargin=15pt}
+\setlist[question, 3]{label=\textbf{\arabic{questioni}.\alph{questionii}.\kern1.5pt\roman{questioniii}},	leftmargin=30pt, rightmargin=30pt}
+
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+	\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+
+\title{\vspace{-2.5cm}\textbf{\coursefullname}\\\hatypeandnun\\\haname}
+\date{}
+
+%\chead{}
+\rhead{\haname}
+\lfoot{}
+\cfoot{\coursenumber~\coursesemester~\courseyear~---~\hatypeandnun}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\pagestyle{fancy}
+\setlength{\parindent}{0pt}
+
+% NOTE(joe): This environment is credit @pnpo (https://tex.stackexchange.com/a/218450)
+\lstnewenvironment{algorithm}[1][] %defines the algorithm listing environment
+{   
+	\lstset{ %this is the stype
+		mathescape=true,
+		frame=tB,
+		numbers=left, 
+		numberstyle=\tiny,
+		basicstyle=\rmfamily\scriptsize, 
+		keywordstyle=\color{black}\bfseries,
+		keywords={,procedure, div, mod, for, to, input, output, return, datatype, function, in, if, else, foreach, while, begin, end, } %add the keywords you want, or load a language as Rubens explains in his comment above.
+		numbers=left,
+		xleftmargin=.04\textwidth,
+		#1 % this is to add specific settings to an usage of this environment (for instnce, the caption and referable label)
+	}
+}
+{}
+
+\begin{document}
+
+\maketitle
+\vspace*{-2cm}
+\begin{question}
+	\item \textbf{(Gradient Computation)} For a scalar-valued function $f : \mathbb{R}^d \to \mathbb{R}$, the gradient evaluated at $\underline{w} \in \mathbb{R}^d$ is
+	\begin{align*}
+		\nabla f(\underline{w}) = \begin{bmatrix}
+			\frac{\partial f(\underline{w})}{\partial w_1} & \cdots & \frac{\partial f(\underline{w})}{\partial w_d}
+		\end{bmatrix}^\top \in \mathbb{R}^d.
+	\end{align*}
+	Using this definition, compute the gradients of the following functions, where $A \in \mathbb{R}^{d \times d}$ is not necessarily a symmetric matrix.
+	\begin{question}
+		\item $f(\underline{w}) = \underline{w}^\top A \underline{v} + \underline{w}^\top A^\top \underline{v} + \underline{v}^\top A \underline{w} + \underline{v}^\top A^\top \underline{w},$ where $\underline{v} \in \mathbb{R}^d$.
+		\begin{answer}
+			$\nabla f(\underline{w}) = A \underline{v} + A^\top \underline{v} + A^\top \underline{v} + A \underline{v} = 2(A+A^\top) \underline{v}$.
+		\end{answer}
+		\item $f(\underline{w}) = \sum_{i=1}^d \log(1 + \exp(w_i))$
+		\begin{answer}
+			$\frac{\partial}{\partial w_j} f(\underline{w}) = \sum_{i=1}^d \frac{\partial}{\partial w_j} \log(1 + \exp(w_i)) = \frac{\partial}{\partial w_j} \log(1 + \exp(w_j)) = \frac{\exp(w_j)}{1 + \exp(w_j)} = \frac{1}{1 + \exp(-w_j)}$. Thus,
+			\begin{align*}
+				\nabla f(\underline{w}) = \begin{bmatrix}
+					\frac{\partial}{\partial w_1} f(\underline{w})\\
+					\vdots\\
+					\frac{\partial}{\partial w_d} f(\underline{w})
+				\end{bmatrix} = \begin{bmatrix}
+				\frac{1}{1 + \exp(-w_1)}\\
+				\vdots\\
+				\frac{1}{1 + \exp(-w_d)}
+				\end{bmatrix}.
+			\end{align*}
+		\end{answer}
+		\item $f(\underline{w}) = \sqrt{1 + \|\underline{w}\|_2^2}$
+		\begin{answer}
+			\begin{align*}
+				\nabla f(\underline{w}) = \frac{\nabla (1 + \|\underline{w}\|_2^2)}{2\sqrt{1 + \|\underline{w}\|_2^2}} = \frac{\nabla (\|\underline{w}\|_2^2)}{2\sqrt{1 + \|\underline{w}\|_2^2}} = \frac{\nabla (\underline{w}^\top \underline{w})}{2\sqrt{1 + \|\underline{w}\|_2^2}} = \frac{\nabla (\underline{w}^\top I \underline{w})}{2\sqrt{1 + \|\underline{w}\|_2^2}} = \frac{2I\underline{w}}{2\sqrt{1 + \|\underline{w}\|_2^2}} = \frac{\underline{w}}{\sqrt{1 + \|\underline{w}\|_2^2}}
+			\end{align*}
+		\end{answer}
+	\end{question}
+	
+	\item \textbf{(Logistic Regression)} You are given a dataset $\mathcal{D} = \{(\underline{x}_n, y_n)\}_{n=1}^N$, where $\underline{x}_n \in \mathbb{R}^{d+1}, d \geq 1$, and $y_n \in \{+1,-1\}$. For $\underline{w} \in \mathbb{R}^{d+1}$ and $\underline{x} \in \mathbb{R}^{d+1}$, we wish to train a logistic regression model $h(\underline{x}) = \theta(\underline{w}^\top \underline{x})$, where $\theta(.)$ is the logistic function defined as $\theta(z) = \frac{e^z}{1 + e^z}, \text{ for } z \in \mathbb{R}$. Following the arguments on page 91 of LFD, the in-sample error can be written as
+	$E_{\text{in}}(\underline{w}) = \frac{1}{N} \sum_{n=1}^N \log\left[\frac{1}{P_{\underline{w}}(y_n \mid \underline{x}_n)}\right]$ where
+	\begin{equation*}
+	P_{\underline{w}}(y \mid \underline{x}) = \begin{cases}
+		h(\underline{x}), & \text{ if }y = +1, \\
+		1 - h(\underline{x}), & \text{ if }y = -1.
+	\end{cases}
+	\end{equation*}
+	\begin{question}
+		\item Show that $E_{\text{in}}(\underline{w})$ can be expressed as
+		\begin{equation*}
+			E_{\text{in}}(\underline{w}) = \frac{1}{N} \left( \sum_{n=1}^N \mathbb{I}(y_n = +1) \log\left[\frac{1}{h(\underline{x}_n)}\right] + \mathbb{I}(y_n = -1) \log\left[\frac{1}{1 - h(\underline{x}_n)}\right] \right),
+		\end{equation*}
+		where $\mathbb{I}(\text{argument})$ evaluates to 1 if the argument is true and 0 if it is false.
+		\begin{answer}
+			Observe that for any $n \in \{1, 2, \ldots, N\}$,
+			\begin{align*}
+				\mathbb{I}(y_n = +1) \log\left[\frac{1}{h(\underline{x}_n)}\right] + \mathbb{I}(y_n = -1) \log\left[\frac{1}{1 - h(\underline{x}_n)}\right] &= \begin{cases*}
+					\log\left[\frac{1}{h(\underline{x}_n)}\right], \text{ if }y_n=+1,\\
+					\log\left[\frac{1}{1-h(\underline{x}_n)}\right], \text{ if }y_n=-1,
+				\end{cases*}\\
+				&= \begin{cases*}
+					\log\left[\frac{1}{P_{\underline{w}}(+1 \mid \underline{x})}\right], \text{ if }y_n=+1,\\
+					\log\left[\frac{1}{P_{\underline{w}}(-1 \mid \underline{x})}\right], \text{ if }y_n=-1,
+				\end{cases*}\\
+				& = \log\left[\frac{1}{P_{\underline{w}}(y_n \mid \underline{x})}\right]
+			\end{align*}
+			Thus, $$E_{\text{in}}(\underline{w}) = \frac{1}{N} \left( \sum_{n=1}^N \log\left[\frac{1}{P_{\underline{w}}(y_n \mid \underline{x})}\right] \right) =  \frac{1}{N} \left( \sum_{n=1}^N \mathbb{I}(y_n = +1) \log\left[\frac{1}{h(\underline{x}_n)}\right] + \mathbb{I}(y_n = -1) \log\left[\frac{1}{1 - h(\underline{x}_n)}\right] \right).$$
+		\end{answer}
+		\item \label{2.b}Show that $E_{\text{in}}(\underline{w})$ can also be expressed as
+		\begin{equation*}
+			E_{\text{in}}(\underline{w}) = \frac{1}{N} \sum_{n=1}^N \log(1 + \exp(-y_n \underline{w}^\top \underline{x}_n)).
+		\end{equation*}
+		\begin{answer}
+			Observe that $P_{\underline{w}}(y \mid \underline{x}) = \begin{cases}
+				h(\underline{x}), & \text{ if }y = +1, \\
+				1 - h(\underline{x}), & \text{ if }y = -1
+			\end{cases}$. Substituting $h(\underline{x})$, 
+			\begin{align*}
+				P_{\underline{w}}(y \mid \underline{x}) &= \begin{cases}
+					\theta(\underline{w}^\top \underline{x}), & \text{ if }y = +1, \\
+					1 - \theta(\underline{w}^\top \underline{x}), & \text{ if }y = -1
+				\end{cases} = \begin{cases}
+				\frac{e^{\underline{w}^\top \underline{x}}}{1 + e^{\underline{w}^\top \underline{x}}}, & \text{ if }y = +1, \\
+				1 - \frac{e^{\underline{w}^\top \underline{x}}}{1 + e^{\underline{w}^\top \underline{x}}}, & \text{ if }y = -1
+				\end{cases} = \begin{cases}
+				\frac{1}{1 + e^{-\underline{w}^\top \underline{x}}}, & \text{ if }y = +1, \\
+				\frac{1}{1 + e^{\underline{w}^\top \underline{x}}}, & \text{ if }y = -1
+				\end{cases}\\
+				&= \frac{1}{1 + e^{-y \underline{w}^\top \underline{x}}}.
+			\end{align*}
+			Thus, $E_{\text{in}}(\underline{w}) = \frac{1}{N} \sum_{n=1}^N \log\left[\frac{1}{P_{\underline{w}}(y_n \mid \underline{x}_n)}\right] = \frac{1}{N} \sum_{n=1}^N \log (1 + e^{-y \underline{w}^\top \underline{x}})$.
+		\end{answer}
+		\item Use~\ref{2.b} to show that
+		\begin{equation*}
+			\nabla E_{\text{in}}(\underline{w}) = \frac{1}{N} \sum_{n=1}^N -y_n \underline{x}_n \theta(-y_n \underline{w}^\top \underline{x}_n),
+		\end{equation*}
+		and argue that a ``misclassified'' example contributes more to the gradient than a correctly classified one.
+		\begin{answer}
+			\begin{align}
+				\nabla E_{\text{in}}(\underline{w}) &= \nabla \frac{1}{N} \sum_{n=1}^N \log (1 + e^{-y_n \underline{w}^\top \underline{x}_n}) = \frac{1}{N} \sum_{n=1}^N \nabla \log (1 + e^{-y_n \underline{w}^\top \underline{x}_n})\nonumber \\ 
+				&= \frac{1}{N} \sum_{n=1}^N \frac{\nabla e^{-y_n \underline{w}^\top \underline{x}_n}}{1 + e^{-y_n \underline{w}^\top \underline{x}_n}} = \frac{1}{N} \sum_{n=1}^N \frac{e^{-y_n \underline{w}^\top \underline{x}_n} (-y_n \underline{x}_n)}{1 + e^{-y \underline{w}^\top \underline{x}}} = \frac{1}{N} \sum_{n=1}^N -y_n \underline{x}_n \theta(-y_n \underline{w}^\top \underline{x}_n).\label{der}
+			\end{align}
+			Consider two arbitrary points $(\underline{x}_n, y_n)$ and $(\underline{x}_{n}, y_{n'})$. To have fair comparison between the contribution of the two points to the gradient, let's assume that $\|x_n\|=\|x_{n'}\|$. Assume that $\underline{x}_n$ is correctly classified by the weight parameters $\underline{w}$ but $\underline{x}_{n'}$ is misclassified. Therefore, $y_n \underline{w}^\top \underline{x}_n>0$ and $y_{n'} \underline{w}^\top \underline{x}_{n'} \leq 0$. Consequently, $\theta(-y_n \underline{w}^\top \underline{x}_n) < \theta(-y_{n'} \underline{w}^\top \underline{x}_{n'})$. By the derivative derived in~\eqref{der}, $\theta(-y_n \underline{w}^\top \underline{x}_n)$ and  $\theta(-y_{n'} \underline{w}^\top \underline{x}_{n'})$ represent the contribution of $(\underline{x}_n, y_n)$ and $(\underline{x}_{n'}, y_{n'})$ to the gradient, respectively. Note that $\theta(-y_n \underline{w}^\top \underline{x}_n) < \theta(-y_{n'} \underline{w}^\top \underline{x}_{n'})$, which implies that the misclassified point, \emph{i.e.} $(\underline{x}_{n'}, y_{n'})$, contributes more than the correctly classified point to the gradient.
+		\end{answer}
+	\end{question}
+	
+	\item \textbf{(Problem 4, Midterm 2017)} Consider the logistic regression setup as in the previous question. Suppose we are given a dataset $D = \{(\underline{x}_1, y_1), (\underline{x}_2, y_2)\}$ with
+	\[
+	\underline{x}_1 = \begin{bmatrix} 1 \\ 1 \end{bmatrix}, \quad y_1 = 1, \quad \underline{x}_2 = \begin{bmatrix} 1 \\ 0 \end{bmatrix}, \quad y_2 = -1.
+	\]
+	For any $\underline{w} \in \mathbb{R}^2$, we consider the $\ell_2$-regularized error as
+	\[
+	E_{\text{in}}(\underline{w}) = -\sum_{n=1}^N \log \left[ P_{\underline{w}}(y_n \mid \underline{x}_n) \right] + \lambda \|\underline{w}\|_2^2, \quad \lambda > 0,
+	\]
+	where
+	\[
+	P_{\underline{w}}(y \mid \underline{x}) = \begin{cases}
+		h(\underline{x}) & y = +1 \\
+		1 - h(\underline{x}) & y = -1
+	\end{cases},
+	\]
+	and
+	\[
+	h(x) = \frac{e^{\underline{w}^\top \underline{x}}}{1 + e^{\underline{w}^\top \underline{x}}} = \frac{1}{1 + e^{-\underline{w}^\top \underline{x}}}.
+	\]
+	\begin{question}
+		\item For $\lambda = 0$, find the optimal $\underline{w}$ that minimizes $E_{\text{in}}(\underline{w})$ and the minimum value of $E_{\text{in}}(\underline{w})$. (Hint: you are given $(\underline{x}_n, y_n)$, so plug those values into the expression of the in-sample error).
+		\begin{answer}
+			~\\
+			\textbf{Approach 1:} Given the dataset, $$E_{\text{in}}(\underline{w}) = \log(1+e^{-\underline{w}^\top \underline{x}_1}) + \log(1+e^{\underline{w}^\top \underline{x}_2}) = \log(1+e^{-w_0-w_1}) + \log(1+e^{w_0}).$$ Note that $E_{\text{in}}(\underline{w})$ is non-negative and it can be minimized by setting $w_0=-\alpha$ and $w_1= 2\alpha$ and making $\alpha \rightarrow \infty$, as both $\log(1+e^{w_0})$ and $\log(1+e^{-w_0-w_1})$ will converge to zero with such $\underline{w}$. Thus, the minimum value of $ E_{\text{in}}(\underline{w})$ is $0$.\\
+			
+			\textbf{Approach 2:} We can find the optimum point by finding the solution to $\nabla E_{\text{in}}(\underline{w}) = \underline{0}$, as $E_{\text{in}}(\underline{w})$ is a convex function. Given the dataset,
+			\begin{align*}
+				\nabla E_{\text{in}}(\underline{w}) &= \frac{1}{2} \left(-y_1 \underline{x}_1 \theta(-y_1 \underline{w}^\top \underline{x}_1) -y_2 \underline{x}_2 \theta(-y_2 \underline{w}^\top \underline{x}_2)\right)\\
+				&= \frac{1}{2} \left( -\frac{y_1 \underline{x}_1}{1+e^{y_1 \underline{w}^\top \underline{x}_1}} - \frac{y_2 \underline{x}_2}{1+e^{y_2 \underline{w}^\top \underline{x}_2}}\right)\\
+				&= \frac{1}{2} \left( -\frac{y_1 \underline{x}_1}{1+e^{w_0 + w_1}} - \frac{y_2 \underline{x}_2}{1+e^{-w_0}}\right)\\
+				&= \begin{bmatrix}
+					\frac{-1}{1+e^{w_0 + w_1}} + \frac{1}{1+e^{-w_0}}\\
+					\frac{-1}{1+e^{w_0 + w_1}}
+				\end{bmatrix}
+			\end{align*}
+			Observe that $\nabla E_{\text{in}}(\underline{w}) = \begin{bmatrix}
+				\frac{-1}{1+e^{w_0 + w_1}} + \frac{1}{1+e^{-w_0}}\\
+				\frac{-1}{1+e^{w_0 + w_1}}
+			\end{bmatrix} = \begin{bmatrix}
+			0\\
+			0
+			\end{bmatrix}$ can be achieved by setting $w_0=-\alpha$ and $w_1= 2\alpha$ and making $\alpha \rightarrow \infty$. It is easy to check that with such $\underline{w}$, $\nabla E_{\text{in}}(\underline{w})$ converges to $0$. 
+		\end{answer}
+		\item Suppose $\lambda$ is a very large constant such that it suffices to consider weights that satisfy $\|\underline{w}\|_2 \ll 1$. Since $\underline{w}$ has a small magnitude, we may use the Taylor series approximation
+		\[
+		\log(1 + \exp(-y_n \underline{w}^\top \underline{x}_n)) \approx \log(2) - \frac{1}{2} y_n \underline{w}^\top \underline{x}_n.
+		\]
+		Assuming the above approximation is exact, find $\underline{w}$ that minimizes $E_{\text{in}}(\underline{w})$ (it should be expressed in terms of $\lambda$).
+		\begin{answer}
+			Under such assumptions, 
+			\begin{align*}
+				E_{\text{in}}(\underline{w}) =  \sum_{n=1}^N \log(1 + \exp(-y_n \underline{w}^\top \underline{x}_n)) + \lambda \|\underline{w}\|_2^2 = 2\log(2) + \lambda \underline{w}^\top\underline{w}- \frac{1}{2} \sum_{n=1}^N y_n \underline{w}^\top \underline{x}_n.
+			\end{align*}
+			Thus, $\nabla  E_{\text{in}}(\underline{w}) = 2\lambda \underline{w} - \frac{1}{2} \sum_{n=1}^N y_n \underline{x}_n$. Given the dataset, $\nabla  E_{\text{in}}(\underline{w}) = 2\lambda \underline{w} - \frac{1}{2}\begin{bmatrix}
+			0\\
+			1
+			\end{bmatrix}.$ To find the optimal point of $E_{\text{in}}(\underline{w})$, it suffice to solve $2\lambda \underline{w}^\star - \frac{1}{2}\begin{bmatrix}
+			0\\
+			1
+			\end{bmatrix} = \underline{0}$, which results in $\underline{w}^\star = \begin{bmatrix}
+			0\\
+			\frac{1}{4 \lambda}
+			\end{bmatrix}$
+			
+		\end{answer}
+	\end{question}
+	\item \textbf{(Hinge Loss)} Here are two reviews of "Perfect Blue", from \textit{Rotten Tomatoes}:
+	\begin{quote}
+		\textbf{Panos Kotzathanasis} (Asian Movie Plus): "Perfect Blue" is an artistic and technical masterpiece; however, what is of outmost importance is the fact that Satoshi Kon never deteriorate from the high standards he set here, in the first project that was entirely his own.\\
+		
+		\textbf{Derek Smith} (Cinematic Reflections): [An] nime thriller [that] often plays as an examination of identity and celebrity, but ultimately gets so lost in its own complex structure that it doesn't end up saying much at all.
+	\end{quote}
+	
+	Rotten Tomatoes has classified these reviews as ``positive'' and ``negative,'' respectively.\\
+	
+	In this assignment, you will create a simple text classification system that can perform this task automatically. We'll warm up with the following set of four mini-reviews, each labeled positive $(+1)$ or negative $(-1)$:
+	\begin{enumerate}
+		\item $\underline{x}_1:$ not good; label: $(-1)$
+		\item $\underline{x}_2:$ pretty bad; label: $(-1)$
+		\item $\underline{x}_3:$ good plot; label: $(+1)$
+		\item $\underline{x}_4:$ pretty scenery; label: $(+1)$
+	\end{enumerate}
+	
+	Each review $\underline{x}$ is mapped onto a feature vector $\phi(\underline{x})$, which maps each word to the number of occurrences of that word in the review and adds a $1$ to account for bias. For example, the second review maps to the (sparse) feature vector $\phi(\underline{x}_2)=\{\textbf{extra added 1}:1, \textbf{pretty}:1,\textbf{bad}:1\}$. The hinge loss for a single datapoint is defined as
+	\begin{equation*}
+		L_{\text{hinge}}(\underline{x}, y,\underline{w})= \max\{0, 1-y\underline{w}^\top\phi(\underline{x})\},
+	\end{equation*}
+	where $\underline{x}$ is the review text, $y$ is the correct label, $\underline{w}$ is the weight vector.
+	\begin{question}
+%		\item \textbf{(Gradient Descent)} Suppose we run stochastic gradient descent once for each of the 4 samples in the order given above, updating the weights according to
+%		\begin{equation*}
+%			\underline{w} \leftarrow \underline{w} - \eta \nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}, y, \underline{w}).
+%		\end{equation*}
+%		
+%		After the updates, what are the weights of the six words (``pretty'', ``good'', ``bad'', ``plot'', ``not'', ``scenery'') that appear in the above reviews?
+%		\begin{itemize}
+%			\item Use $\eta=0.1$ as the step size.
+%			\item Initialize $\underline{w}=[0,0,0,0,0,0]$.
+%			\item The gradient $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}, y, \underline{w})=0$ when margin is exactly 1 (\emph{i.e.}, when $y\underline{w}^\top\phi(\underline{x}) = 1$).
+%		\end{itemize}
+%		
+%		Present your answer as a weight vector that contains a numerical value for each of the tokens in the reviews  (``pretty'', ``good'', ``bad'', ``plot'', ``not'', ``scenery'').
+		%		\begin{answer}
+			%			First, let's formulate the gradient of the loss function.
+			%			\begin{equation*}
+				%				\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}, y, \underline{w}) = \begin{cases}
+					%					-\phi(\underline{x})y, & \text{ if } \underline{w}^\top\phi(\underline{x})y < 1,\\
+					%					\vec{\mathbf{0}}, & \text{ if } \underline{w}^\top\phi(\underline{x})y \geq 1,
+					%				\end{cases}
+				%			\end{equation*}
+			%			where $\vec{\mathbf{0}}$ is a vector of all zeros.
+			%			
+			%			\begin{enumerate}[label=\textbf{Step \arabic* (datapoint $\underline{x}_\arabic*$):}, itemindent=3.5cm]
+				%				\item $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_1, y_1, \underline{w}) = -\phi(\underline{x}_1)y_1$. Therefore, 
+				%				\begin{align*}
+					%					&\underline{w} \leftarrow \underline{w} - 0.1 (-\phi(\underline{x}_1)y_1).
+					%				\end{align*}
+				%				Hence, $\underline{w}=[0, -0.1, 0, 0, -0.1, 0]$.
+				%				\item $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_2, y_2, \underline{w}) = -\phi(\underline{x}_2)y_2$. \begin{align*}
+					%					&\underline{w} \leftarrow \underline{w} - 0.1 (-\phi(\underline{x}_2)y_2).
+					%				\end{align*}
+				%				Hence, $\underline{w}=[-0.1, -0.1, -0.1, 0, -0.1, 0]$.
+				%				\item $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_3, y_3, \underline{w}) = -\phi(\underline{x}_3)y_3$. \begin{align*}
+					%					&\underline{w} \leftarrow \underline{w} - 0.1 (-\phi(\underline{x}_3)y_3).
+					%				\end{align*}
+				%				Hence, $\underline{w}=[-0.1, 0, -0.1, 0.1, -0.1, 0]$.
+				%				\item $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_4, y_4, \underline{w}) = -\phi(\underline{x}_4)y_4$. \begin{align*}
+					%					&\underline{w} \leftarrow \underline{w} - 0.1 (-\phi(\underline{x}_4)y_4).
+					%				\end{align*}
+				%				Hence, $\underline{w}=[0, 0, -0.1, 0.1, -0.1, 0.1]$.
+				%			\end{enumerate}
+			%		\end{answer}
+		
+		\item \textbf{(Linearly Inseparable)} Given the following dataset of reviews:
+		\begin{enumerate}
+			\item $\underline{x}_1:$ bad; label: $(-1)$
+			\item $\underline{x}_2:$ good; label: $(+1)$
+			\item $\underline{x}_3:$ not bad; label: $(+1)$
+			\item $\underline{x}_4:$ not good; label: $(-1)$
+		\end{enumerate}
+		
+		Prove that no linear classifier using word features (\textit{i.e.}, word count) can get zero error on this dataset. Remember that this is a question about classifiers, not optimization algorithms; your proof should be true for any linear classifier of the form $f_{\underline{w}}(\underline{x})=\text{sign}(\underline{w}^\top\phi(\underline{x}))$, regardless of how the weights are learned.
+		
+		Propose a single additional feature for your dataset that we could augment the feature vector with that to fix this problem.
+		\begin{answer}
+			Assume by contradiction that there exists a weight vector $\mathbf{\hat{w}}$ that gets zero error on this dataset, \textit{i.e.},
+			\begin{align}
+					&\mathbf{\hat{w}}^\top\phi(\underline{x}_1) < 0,\label{x1}\\
+					&\mathbf{\hat{w}}^\top\phi(\underline{x}_2) > 0,\label{x2}\\
+					&\mathbf{\hat{w}}^\top\phi(\underline{x}_3) > 0,\label{x3}\\
+					&\mathbf{\hat{w}}^\top\phi(\underline{x}_4) < 0.\label{x4}
+				\end{align}
+			 Observe that $\phi(\underline{x}_1) + \phi(\underline{x}_4) = \phi(\underline{x}_2)+\phi(\underline{x}_3)$. Thus, $\mathbf{\hat{w}}^\top\phi(\underline{x}_1) + \mathbf{\hat{w}}^\top\phi(\underline{x}_4) = \mathbf{\hat{w}}^\top\phi(\underline{x}_2)+ \mathbf{\hat{w}}^\top\phi(\underline{x}_3)$. However, by~\eqref{x1} and~\eqref{x4}, $\mathbf{\hat{w}}^\top\phi(\underline{x}_1) + \mathbf{\hat{w}}^\top\phi(\underline{x}_4) < 0$, and by~\eqref{x2} and~\eqref{x3}, $\mathbf{\hat{w}}^\top\phi(\underline{x}_2) + \mathbf{\hat{w}}^\top\phi(\underline{x}_3) > 0$, which is a contradiction.
+			
+			To make the datapoints linearly separable, it suffices to introduce the new feature which is the multiple of ``good'' count and ``no'' count. After augmenting with this feature, the feature vectors will be as follows.
+			
+			\begin{tabular}{|l|l|l|l|l|l|l|}
+					\hline
+					$\phi(\underline{x}_i)$& extra added 1 & good & bad & not & not $\times$ good & $y_i$ \\\hline
+					$\phi(\underline{x}_1)$& 1& 0 & 1 & 0 & 0 & -1 \\\hline
+					$\phi(\underline{x}_2)$& 1& 1	& 0 & 0 & 0 & 1 \\\hline
+					$\phi(\underline{x}_3)$& 1& 0	& 1	& 1 & 0 & 1 \\\hline
+					$\phi(\underline{x}_4)$& 1& 1	& 0	& 1 & 1 & -1 \\\hline
+				\end{tabular}
+			
+			It is easy to check that the weight vector $\underline{w} = [0, 1, -1, 2, -4]$ has zero loss on this augmented dataset.
+		\end{answer}
+	\end{question}
+	
+	\item \textbf{(Squared Loss)} Suppose that we are now interested in predicting a numeric rating for movie reviews. We will use a non-linear predictor that takes a movie review $\underline{x}$ and returns $\sigma(\underline{w}^\top\phi(\underline{x}))$, where $\sigma(z)=(1+e^{-z})^{-1}$ is the logistic function that squashes a real number to the range $(0,1)$. For this problem, assume that the movie rating $y$ is a real-valued variable in the range $[0,1]$.
+	\begin{question}
+		\item Suppose that we wish to use squared loss. Write out the expression of the loss $L(\underline{x},y,\underline{w})$ for a single datapoint $(\underline{x},y)$.
+		\begin{answer}
+			~
+			\begin{equation*}
+				L(\underline{x},y,\vecw) = \frac{1}{2}\left(y - \frac{1}{1+e^{-\vecw^\top\phi(\underline{x})}}\right)^2.
+			\end{equation*}
+		\end{answer}
+		\item Given $L(\underline{x},y,\underline{w})$ from the previous part, compute the gradient of the loss with respect to $\underline{w}$, $\nabla_{\underline{w}}L(\underline{x},y,\underline{w})$. Write the answer in terms of the predicted value $p=\sigma(\underline{w}^\top\phi(\underline{x}))$.
+		\begin{answer}
+			~
+			\begin{align*}
+				\nabla_{\underline{w}}L(\underline{x},y,\underline{w}) &= \frac{1}{2}\nabla_{\underline{w}}\left(y - \frac{1}{1+e^{-\vecw^\top\phi(\underline{x})}}\right)^2 = \left(y - \frac{1}{1+e^{-\vecw^\top\phi(\underline{x})}}\right)\nabla_{\underline{w}}\left(y - \frac{1}{1+e^{-\vecw^\top\phi(\underline{x})}}\right)\\
+				&=-(y-p)\nabla_{\underline{w}}\left(\frac{1}{1+e^{-\vecw^\top\phi(\underline{x})}}\right)=\frac{y-p}{\left(1+e^{-\vecw^\top\phi(\underline{x})}\right)^2}\nabla_{\underline{w}}\left(1+e^{-\vecw^\top\phi(\underline{x})} \right)\\
+				&=\frac{y-p}{\left(1+e^{-\vecw^\top\phi(\underline{x})}\right)^2}\nabla_{\underline{w}}\left(e^{-\vecw^\top\phi(\underline{x})} \right)\\
+				&=\frac{y-p}{\left(1+e^{-\vecw^\top\phi(\underline{x})}\right)^2} e^{-\vecw^\top\phi(\underline{x})}\nabla_{\underline{w}}\left({-\vecw^\top\phi(\underline{x})} \right)\\
+				&=-\frac{y-p}{\left(1+e^{-\vecw^\top\phi(\underline{x})}\right)^2} e^{-\vecw^\top\phi(\underline{x})}\phi(\underline{x})\\
+				&=-\frac{y-p}{1+e^{-\vecw^\top\phi(\underline{x})}} \frac{e^{-\vecw^\top\phi(\underline{x})}}{1+e^{-\vecw^\top\phi(\underline{x})}}\phi(\underline{x})\\
+				&=(p-y) p(1-p) \phi(\underline{x})
+			\end{align*}
+		\end{answer}
+		\item Suppose there is one datapoint $(\underline{x},y)$ with some arbitrary non-zero $\phi(\underline{x})$ and $y=1$. Specify conditions for $\underline{w}$ to make the magnitude of the gradient of the loss with respect to $\underline{w}$ arbitrarily small (\textit{i.e.}, minimize the magnitude of the gradient). Can the magnitude of the gradient with respect to $\underline{w}$ ever be exactly zero? You are allowed to make the magnitude of $\underline{w}$ arbitrarily large but not infinity.\\
+		
+		\textbf{Why does it matter?} the reason why we're interested in the magnitude of the gradients is because it governs how far gradient descent will step. For example, if the gradient is close to zero when $\underline{w}$ is very far from the optimum, then it could take a long time for gradient descent to reach the optimum (if at all). This is known as the vanishing gradient problem when training neural networks.
+		\begin{answer}
+			Let $y=1$. Then the gradient would be $\nabla_{\underline{w}}L(\underline{x},y,\underline{w})= -p(1-p)^2 \phi(\underline{x})$. To make the gradient arbitrary small, either $p\rightarrow 0$ or $p\rightarrow 1$, \emph{i.e.}, $e^{-\vecw^\top\phi(\underline{x})} \rightarrow +\infty$ or $e^{-\vecw^\top\phi(\underline{x})} \rightarrow 0$. Hence, we must have $\vecw^\top\phi(\underline{x}) \rightarrow -\infty$ or $\vecw^\top\phi(\underline{x}) \rightarrow +\infty$. This can be achieved for any arbitrary non-zero $\phi(\underline{x})$, by making the magnitude of the elements  in $\vecw$ arbitrary large.\\
+			
+			The gradient cannot be exactly zero for any arbitrary $\phi(\underline{x})$ since $0<p<1$. 
+		\end{answer}
+	\end{question}
+\end{question}
+\end{document}
