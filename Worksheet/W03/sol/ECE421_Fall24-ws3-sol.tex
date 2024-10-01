@@ -199,7 +199,7 @@
 			\end{answer}
 			\item \label{qq}Demonstrate that matrix $X^\top X + \lambda N  I$, where $I$ is the identity matrix, is invertible by proving that none of its eigenvalues are zero.\\\hint{Assume $\underline{v}$ is an eigenvector of $X^\top X$ with corresponding eigenvalue $\mu$. In~\ref{q}, you proved that $\mu \geq 0$. Now, show that $\underline{v}$ is also an eigenvector of $X^\top X + \lambda N  I$ and find its corresponding eigenvalue.}
 			\begin{answer}
-				Assume an arbitrary eigenvector of $X^\top X$, $\underline{v}$, and its corresponding eigenvalue $\mu$. Therefore, $X^\top X \underline{v} = \mu \underline{v}$. By~\ref{q}, $\mu \geq 0$. Observe that $(X^\top X + \lambda N  I) \underline{v} = X^\top X \underline{v} + \lambda N  I \underline{v} = \mu \underline{v} + N \underline{v} = (\mu + N) \underline{v}$. Hence, $\underline{v}$ is the eigenvector of $(X^\top X + \lambda N  I)$ and its corresponding eigenvalue is $(\mu + N) > 0$. Thus, all the eigenvalues of $(X^\top X + \lambda N  I)$ are non-zero.
+				Assume an arbitrary eigenvector of $X^\top X$, $\underline{v}$, and its corresponding eigenvalue $\mu$. Therefore, $X^\top X \underline{v} = \mu \underline{v}$. By~\ref{q}, $\mu \geq 0$. Observe that $(X^\top X + \lambda N  I) \underline{v} = X^\top X \underline{v} + \lambda N  I \underline{v} = \mu \underline{v} + \lambda N \underline{v} = (\mu + \lambda N) \underline{v}$. Hence, $\underline{v}$ is the eigenvector of $(X^\top X + \lambda N  I)$ and its corresponding eigenvalue is $(\mu + \lambda N) > 0$. Thus, all the eigenvalues of $(X^\top X + \lambda N  I)$ are non-zero.
 			\end{answer}
 			\item Using the invertibility of matrix $X^\top X + \lambda N  I$, find an analytical solution for $\underline{w}^\star = \underset{\underline{w}}{\arg \min}~E_{\text{in}}(\underline{w})$. Congratulations! You have trained a regularized linear regression model with an $\ell_2$ regularization penalty.
 			\begin{answer}
@@ -266,7 +266,7 @@
 						&\underline{w} \leftarrow \underline{w} - 0.1 \phi(\underline{x}_1).
 					\end{align*}
 				Hence, $\underline{w}=[-0.1, 0, -0.1, 0, 0, -0.1, 0]$.
-				\item Observe that $\underline{w}^\top\phi(\underline{x}_2)y_2=0.1$ and $y_1=-1$. Thus, $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_2, y_2, \underline{w}) = \phi(\underline{x}_2)$. Therefore,
+				\item Observe that $\underline{w}^\top\phi(\underline{x}_2)y_2=0.1$ and $y_2=-1$. Thus, $\nabla_{\underline{w}} L_{\text{hinge}}(\underline{x}_2, y_2, \underline{w}) = \phi(\underline{x}_2)$. Therefore,
 				\begin{align*}
 					&\underline{w} \leftarrow \underline{w} - 0.1 \phi(\underline{x}_2).
 				\end{align*}
