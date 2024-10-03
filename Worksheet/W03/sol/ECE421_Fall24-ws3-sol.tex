@@ -179,7 +179,7 @@
 	\end{itemize}
 	In this question, you will train a regularized linear regression model with an $\ell_2$ regularization penalty.\\
 	
-	You are given a dataset $\mathcal{D} = \{(\underline{x}_n, y_n)\}_{n=1}^N$, where $\underline{x}_n \in \mathbb{R}^{d+1}, d \geq 1$, and $y_n \in \{+1,-1\}$. We would like to train a regularized linear regression model, where the mean squared loss is augmented with an $\ell_2$ regularization penalty $\|\underline{w}\|_2^2$ on the weight parameter $\underline{w}  \in \mathbb{R}^{d+1}$, \textit{i.e.},
+	You are given a dataset $\mathcal{D} = \{(\underline{x}_n, y_n)\}_{n=1}^N$, where $\underline{x}_n \in \mathbb{R}^{d+1}, d \geq 1$, and $y_n \in \mathbb{R}$. We would like to train a regularized linear regression model, where the mean squared loss is augmented with an $\ell_2$ regularization penalty $\|\underline{w}\|_2^2$ on the weight parameter $\underline{w}  \in \mathbb{R}^{d+1}$, \textit{i.e.},
 	\begin{equation*}
 		E_{\text{in}}(\underline{w}) = \frac{1}{2N} \sum_{n=1}^N\left(\underline{w}^\top \underline{x}_n - y_n\right)^2 + \frac{\lambda}{2}\|\underline{w}\|_2^2 = \frac{1}{2N} \|X\underline{w} - \underline{y}\|_2^2 + \frac{\lambda}{2}\|\underline{w}\|_2^2.
 	\end{equation*} 
@@ -205,7 +205,7 @@
 			\begin{answer}
 				As $E_{\text{in}}(\underline{w})$ is a convex function, $\nabla_{\!\underline{w}}E_{\text{in}}(\underline{w}^\star) = 0$. Note that 
 				\begin{align*}
-					\nabla_{\!\underline{w}}E_{\text{in}}(\underline{w})  &= \nabla_{\!\underline{w}}(\frac{1}{2N} (X \underline{w} - \underline{y})^\top (X \underline{w} - \underline{y}) + \frac{\lambda}{2} \underline{w}^\top \underline{w}) =\\
+					\nabla_{\!\underline{w}}E_{\text{in}}(\underline{w})  &= \nabla_{\!\underline{w}}(\frac{1}{2N} (X \underline{w} - \underline{y})^\top (X \underline{w} - \underline{y}) + \frac{\lambda}{2} \underline{w}^\top \underline{w})\\
 					&= \frac{1}{2N} \nabla_{\!\underline{w}}\left((X \underline{w} - \underline{y})^\top (X \underline{w} - \underline{y})\right)+\frac{\lambda}{2} \nabla_{\!\underline{w}} \underline{w}^\top \underline{w}\\
 					&= \frac{1}{2N} \nabla_{\!\underline{w}}\left((\underline{w}^\top X^\top  - \underline{y}^\top) (X \underline{w} - \underline{y})\right)+\lambda I \underline{w}\\
 					&= \frac{1}{2N} \nabla_{\!\underline{w}}\left(\underline{w}^\top X^\top X \underline{w} - 2\underline{w}^\top X^\top \underline{y}  + \underline{y}^\top \underline{y}\right)+\lambda I \underline{w}\\
@@ -338,7 +338,8 @@
 			\end{align*}
 			and 
 			\begin{align*}
-				\probP^{\text{LR}}(y = 2\mid \underline{x}) &= 1 - \frac{\exp({\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})}{1 + \exp{(\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})} = \frac{1}{1 + \exp{(\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})}\\
+				\probP^{\text{LR}}(y = 2\mid \underline{x}) &= 1- \probP^{\text{LR}}(y = 1\mid \underline{x})\\
+				 &= 1 - \frac{\exp({\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})}{1 + \exp{(\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})} = \frac{1}{1 + \exp{(\left(\underline{w}(1) - \underline{w}(2)\right)^\top \underline{x}})}\\
 				&= \frac{\exp({\underline{w}(2)^\top \underline{x}})}{\exp{(\underline{w}(2)^\top \underline{x}}) + \exp{(\underline{w}(1)^\top \underline{x}})} = \probP^{\text{SM}}(y = 2\mid \underline{x}).
 			\end{align*}
 		\end{answer}
