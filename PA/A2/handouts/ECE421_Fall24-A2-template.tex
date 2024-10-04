@@ -1,0 +1,493 @@
+\documentclass{article}
+
+%Linux command prompt showing package
+\usepackage{listings,menukeys}
+
+%Page format
+\usepackage{pdfpages,fancyhdr}
+\usepackage[margin=1in]{geometry}
+
+%Math packages and custom commands
+\usepackage{algpseudocode,amsmath,framed,tikz,sans,mathtools,amsthm,enumitem,amssymb,dsfont,tabularray,fancyvrb,subcaption}
+\usepackage[hidelinks]{hyperref}
+\usepackage[table,xcdraw]{xcolor}
+%\usepackage[labelformat=empty]{caption}
+\usepackage[utf8]{inputenc}
+\usetikzlibrary{arrows.meta}
+\usepackage[TABcline]{tabstackengine}
+\TABstackMath
+
+
+\usepackage[table]{xcolor}
+\usepackage{collcell}
+\usepackage{hhline}
+\usepackage{pgf}
+\usepackage{multirow}
+
+\def\colorModel{hsb}
+\newcommand\ColCell[1]{
+	\pgfmathparse{#1<50?1:0}  %Threshold for changing the font color into the cells
+	\ifnum\pgfmathresult=0\relax\color{white}\fi
+	\pgfmathsetmacro\compA{0}      %Component R or H
+	\pgfmathsetmacro\compB{#1/100} %Component G or S
+	\pgfmathsetmacro\compC{1}      %Component B or B
+	\edef\x{\noexpand\centering\noexpand\cellcolor[\colorModel]{\compA,\compB,\compC}}\x #1
+} 
+\newcolumntype{E}{>{\collectcell\ColCell}m{0.4cm}<{\endcollectcell}}  %Cell width
+\newcommand*\rot{\rotatebox{90}}
+
+%Course Info
+\newcommand{\coursenumber}{ECE421}
+\newcommand{\coursename}{\coursenumber: Introduction to Machine Learning}
+\newcommand{\courseyear}{2024}
+\newcommand{\coursesemester}{Fall}
+\newcommand{\coursefullname}{\coursename~---~\coursesemester~\courseyear}
+%Handout Info
+\newcommand{\haname}{Due Date: Friday, October 18, 11:59 PM}
+\newcommand{\hatypeandnun}{Assignment 2: Gradient Descent, Multiclass Logistic Regression, and K-Means}
+
+
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcommand{\probP}{\mathds{P}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\text{Var}}
+\DeclareMathOperator{\Cov}{\text{Cov}}
+\renewcommand{\arraystretch}{1.3}
+\newcommand{\norm}[2][2]{\| #2\|_{#1}}
+
+\newcommand{\notp}{\neg p}
+\newcommand{\notq}{\neg q}
+\newcommand{\notr}{\neg r}
+\newcommand{\notP}{\neg P}
+\newcommand{\notQ}{\neg Q}
+
+\newcommand{\con}{\wedge}
+\newcommand{\dis}{\vee}
+\newcommand{\false}{\text{F}}
+\newcommand{\terue}{\text{T}}
+
+% verbatim
+\DefineShortVerb{\|}
+\SaveVerb{py}|Python|
+\SaveVerb{num}|NumPy|
+\SaveVerb{sci}|scikit-learn|
+\SaveVerb{tp1}|test_Part1()|
+\SaveVerb{tp2}|test_Part2()|
+
+\definecolor{shadecolor}{gray}{0.9}
+
+\theoremstyle{definition}
+\newtheorem*{answer}{Answer}
+\newcommand{\note}[1]{\noindent{[\textbf{NOTE:} #1]}}
+\newcommand{\hint}[1]{\noindent{[\textbf{HINT:} #1]}}
+\newcommand{\recall}[1]{\noindent{[\textbf{RECALL:} #1]}}
+\newcommand{\expect}[1]{\noindent{[\textbf{What we expect:} #1]}}
+\newcommand{\mysolution}[1]{\noindent{\begin{shaded}\textbf{Your Solution:}\ #1 \end{shaded}}}
+
+\newlist{question}{enumerate}{3}
+\setlist[question, 1]{label=\Large \textbf{Q\arabic{questioni}.}, leftmargin=\parindent, rightmargin=10pt}
+\setlist[question, 2]{label=\large \textbf{\arabic{questioni}.\alph{questionii}.}, leftmargin=15pt, rightmargin=15pt}
+\setlist[question, 3]{label=\textbf{\arabic{questioni}.\alph{questionii}.\kern1.5pt\roman{questioniii}.},	leftmargin=30pt, rightmargin=30pt}
+
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+	\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+
+\title{\vspace{-2.5cm}\textbf{\coursefullname}\\\hatypeandnun\\\haname}
+\date{}
+
+%\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{\coursenumber~\coursesemester~\courseyear~---~\hatypeandnun}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\pagestyle{fancy}
+\setlength{\parindent}{0pt}
+
+% NOTE(joe): This environment is credit @pnpo (https://tex.stackexchange.com/a/218450)
+\lstnewenvironment{algorithm}[1][] %defines the algorithm listing environment
+{   
+	\lstset{ %this is the stype
+		mathescape=true,
+		frame=tB,
+		numbers=left, 
+		numberstyle=\tiny,
+		basicstyle=\rmfamily\scriptsize, 
+		keywordstyle=\color{black}\bfseries,
+		keywords={,procedure, div, mod, for, to, input, output, return, datatype, function, in, if, else, foreach, while, begin, end, } %add the keywords you want, or load a language as Rubens explains in his comment above.
+		numbers=left,
+		xleftmargin=.04\textwidth,
+		#1 % this is to add specific settings to an usage of this environment (for instnce, the caption and referable label)
+	}
+}
+{}
+
+\begin{document}
+
+\maketitle
+\vspace*{-2cm}
+\section*{General Notes}
+\begin{enumerate}
+	\item Programming assignments can be done in groups of up to 2 students. Students can be in different sections.
+	\item Only one submission from a group member is required.
+	\item Group members will receive the same grade.
+	\item Please post assignment-related questions on Piazza.
+\end{enumerate}
+
+\section*{Turning It In}
+You need to submit your version of the following files:
+\begin{itemize}
+	\item \verb|myTorch.py|
+	\item \verb|PA2_qa.pdf| that answer questions related to the implementations.
+	\item The cover file with your name and student ID filled (it can be as the first page of your \verb|PA2_qa.pdf| or as a separate PDF file.)
+\end{itemize}
+Please pack them into a single folder, compress into a zip file and name it as PA2.zip. Please submit the zip file to Quercus.
+
+\section*{Group Members}
+\begin{center}
+	\begin{tabular}{|p{4.5in}|p{2in}|}
+		\hline
+		Name (and Name on Quercus) & UTORid\\\hline
+		& \\
+		& \\
+		& \\
+		& \\
+		& \\
+		& \\\hline
+		& \\
+		& \\
+		& \\
+		& \\
+		& \\
+		& \\
+		\hline
+	\end{tabular}
+\end{center}
+\newpage
+\section{Gradient Descent}
+\SaveVerb{sgd}|Optimizer.sgd|
+\subsection{\UseVerb{sgd} method}\label{partsgd}
+\begin{enumerate}[label=\ref{partsgd}.\alph*]
+	\item Test function \verb|q1()|.
+	\begin{enumerate}[label=1.1.a.\roman*]
+		\item Describe the termination criteria used in the \verb|test_sgd| function in the \verb|tests_A2.py| file. (1 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+		\item Include the figures generated by \verb|q1()| in your \verb|PA2_qa.pdf| file. (1 marks)
+
+			\SaveVerb{q1}|q1()|
+			% use proper address/name for your png files
+			\begin{figure*}[h]
+				\centering
+				\begin{subfigure}[t]{0.5\textwidth}
+					\centering
+					\includegraphics[height=3.2in]{image.png}
+					\caption{SGD decision parameter trace.}
+				\end{subfigure}%
+				~ 
+				\begin{subfigure}[t]{0.5\textwidth}
+					\centering
+					\includegraphics[height=3.2in]{image.png}
+					\caption{SGD Loss vs. iteration.}
+				\end{subfigure}
+				\caption{Figures generated by \UseVerb{q1}.}
+			\end{figure*}
+
+		\item  With learning rate $\eta=0.05$, what would be the value of $w_1$, \textit{i.e.}, after one iteration of SGD update. Show your mathematical process. If you implemented SGD correctly, the figures generated by \verb|q1()| should verify your $w_1$. (1 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+	\end{enumerate}
+	\newpage
+	\item Test function \verb|q2()|.
+	\begin{enumerate}[label=1.2.b.\roman*]
+		\item Include the figures generated by \verb|q2()| in your \verb|PA2_qa.pdf| file. (1 marks)
+			\SaveVerb{q2}|q2()|
+			% use proper address to your png files
+			\begin{figure*}[h]
+				\centering
+				\begin{subfigure}[t]{0.5\textwidth}
+					\centering
+					\includegraphics[height=3.2in]{image.png}
+					\caption{SGD decision parameter trace.}
+				\end{subfigure}%
+				~ 
+				\begin{subfigure}[t]{0.5\textwidth}
+					\centering
+					\includegraphics[height=3.2in]{image.png}
+					\caption{SGD Loss vs. iteration.}
+				\end{subfigure}
+				\caption{Figures generated by \UseVerb{q2}.}
+			\end{figure*}
+		\item When $\eta=0.05$, SGD would fail to converge to the optimal solution. What causes such behavior? (1 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+	\end{enumerate}
+	\newpage
+	\item Test function \verb|q3()|.
+	\begin{enumerate}[label=1.2.c.\roman*]
+		\item Include the figures generated by \verb|q3()| in your \verb|PA2_qa.pdf| file. (1 marks)
+			\SaveVerb{q3}|q3()|
+			% use proper address to your png files
+			\begin{figure*}[h]
+				\centering
+				\begin{subfigure}[t]{0.5\textwidth}
+					\centering
+					\includegraphics[height=3.2in]{image.png}
+					\caption{SGD decision parameter trace.}
+				\end{subfigure}%
+				~ 
+				\begin{subfigure}[t]{0.5\textwidth}
+					\centering
+					\includegraphics[height=3.2in]{image.png}
+					\caption{SGD Loss vs. iteration.}
+				\end{subfigure}
+				\caption{Figures generated by \UseVerb{q3}.}
+			\end{figure*}
+		\item In 1-2 sentences describe the behavior of SGD in \verb|q3()| when $\eta=0.001, 0.005$, and $0.01$. Explain why SGD fails to find the global optimum point? (1 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+		\item In 1-2 sentences describe the behavior of SGD in \verb|q3()| when $\eta=0.05$. (1 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+	\end{enumerate}
+	\newpage
+	\item Test function \verb|q4()|.
+	\begin{enumerate}[label=1.2.d.\roman*]
+		\item Include the figures generated by \verb|q4()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\SaveVerb{q4}|q4()|
+		% use proper address to your png files
+		\begin{figure*}[h]
+			\centering
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{SGD decision parameter trace.}
+			\end{subfigure}%
+			~ 
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{SGD Loss vs. iteration.}
+			\end{subfigure}
+			\caption{Figures generated by \UseVerb{q4}.}
+		\end{figure*}
+		\item In 1-2 sentences describe the behavior of SGD in \verb|q3()| when $\eta=0.005$ and $0.01$. How is this behavior related to the stretched nature of the function $f(\underline{w})$? (1 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+		\item In 1-2 sentences describe the behavior of SGD in \verb|q3()| when $\eta=0.03$. (1 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+	\end{enumerate}
+\end{enumerate}
+
+\newpage
+\SaveVerb{mom}|Optimizer.heavyball_momentum|
+\SaveVerb{nes}|Optimizer.nestrov_momentum|
+\subsection{\UseVerb{mom} and \UseVerb{nes} methods}\label{mom}
+\begin{enumerate}[label=\ref{mom}.\alph*]
+	\item Test function \verb|q5()|.
+	\begin{enumerate}[label=1.2.a.\roman*]
+		\item Include the figures generated by \verb|q5()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		 use proper address to your png files
+			\begin{figure*}[h]
+				\centering
+				\begin{subfigure}[t]{0.5\textwidth}
+					\centering
+					\includegraphics[height=3.2in]{image.png}
+					\caption{Heavy-ball momentum decision parameter trace.}
+				\end{subfigure}%
+				~ 
+				\begin{subfigure}[t]{0.5\textwidth}
+					\centering
+					\includegraphics[height=3.2in]{image.png}
+					\caption{Heavy-ball momentum Loss vs. iteration.}
+				\end{subfigure}
+				\caption{Figures generated by q5().}
+			\end{figure*}
+		\item In 1-2 sentences, compare the performance of SGD with and without heavy-ball momentum by comparing the outcome of tests \verb|q3()| and \verb|q5()| (2 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+	\end{enumerate}
+	\newpage
+	\item Test function \verb|q6()|.
+	\begin{enumerate}[label=1.2.b.\roman*]
+		\item Include the figures generated by \verb|q4()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\begin{figure*}[h]
+			\centering
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Heavy-ball momentum decision parameter trace.}
+			\end{subfigure}%
+			~ 
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Heavy-ball momentum Loss vs. iteration.}
+			\end{subfigure}
+			\caption{Figures generated by q6().}
+		\end{figure*}
+	\end{enumerate}
+	\newpage
+	\item Test function \verb|q7()|.
+	\begin{enumerate}[label=1.2.c.\roman*]
+		\item Include the figures generated by \verb|q5()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\begin{figure*}[h]
+			\centering
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Nestrov momentum decision parameter trace.}
+			\end{subfigure}%
+			~ 
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Nestrov momentum Loss vs. iteration.}
+			\end{subfigure}
+			\caption{Figures generated by q7().}
+		\end{figure*}
+	\end{enumerate}
+	\newpage
+	\item Test function \verb|q8()|.
+	\begin{enumerate}[label=1.2.d.\roman*]
+		\item Include the figures generated by \verb|q4()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\begin{figure*}[h]
+			\centering
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Nestrov momentum decision parameter trace.}
+			\end{subfigure}%
+			~ 
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Nestrov momentum Loss vs. iteration.}
+			\end{subfigure}
+			\caption{Figures generated by q8().}
+		\end{figure*}
+		\item In 1-2 sentences, compare the performance of Nestrov Momentum with the heavy-ball momentum by comparing the outcome of tests \verb|q5()| and \verb|q6()| with that of \verb|q7()| and \verb|q8()|. (1 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+	\end{enumerate}
+\end{enumerate}
+\newpage
+\SaveVerb{adam}|Optimizer.adam|
+\subsection{\UseVerb{adam} method}\label{adam}
+\begin{enumerate}[label=\ref{adam}.\alph*]
+	\item Test function \verb|q9()|
+	\begin{enumerate}[label=1.3.a.\roman*]
+		\item Include the figures generated by \verb|q9()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\begin{figure*}[h]
+			\centering
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Adam momentum decision parameter trace.}
+			\end{subfigure}%
+			~ 
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Adam momentum Loss vs. iteration.}
+			\end{subfigure}
+			\caption{Figures generated by q9().}
+		\end{figure*}
+		\item In 1-2 sentences, compare the performance of adam with momentum method (heavy-ball or Nestrov) (2 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+	\end{enumerate}
+	\newpage
+	\item Test function \verb|q10()|.
+	\begin{enumerate}[label=1.3.b.\roman*]
+		\item Include the figures generated by \verb|q10()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\begin{figure*}[h]
+			\centering
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Adam momentum decision parameter trace.}
+			\end{subfigure}%
+			~ 
+			\begin{subfigure}[t]{0.5\textwidth}
+				\centering
+				\includegraphics[height=3.2in]{image.png}
+				\caption{Adam momentum Loss vs. iteration.}
+			\end{subfigure}
+			\caption{Figures generated by q10().}
+		\end{figure*}
+		\item Based on the outcome of \verb|q9()| and \verb|q10()|, describe the advantage of Adam in 1-2 sentence. (2 marks) \hint{run \verb|q11()| to see what could be the impact of scaling the function (or gradients) on the other optimization method such as gradient descent with Nestrov Momentum. You don't need to report the output of \verb|q11()| in your report. Also, note that \verb|q11()| would most often result in error. Don't worry. That is intentional. Try to understand why this happens.}
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+	\end{enumerate}
+\end{enumerate}
+
+\newpage
+\section{Multiclass Logistic Regression}\label{logis}
+\subsection{Implementing the Learning Model}
+No written part.
+\subsection{Implementing the Learning Algorithm}\label{fit}
+\begin{enumerate}[label=\ref{fit}.\alph*]
+	\item The test function \verb|q22()| runs your implementation on the Iris dataset.
+	\begin{enumerate}[label=2.2.a.\roman*]
+		\item Include the figures generated by \verb|q22()| in your \verb|PA2_qa.pdf| file. (2 marks)
+		\begin{figure*}[h]
+			\centering
+			\includegraphics[height=3.2in]{image.png}
+			\caption{Figures generated by q22().}
+		\end{figure*}
+		\item In 1-2 sentences, compare the performance of the four variants of gradient descent on this dataset (2 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+		\item In 1-2 sentences, explain how is it possible that the loss derived by the Adam optimizer is smaller than that of Heavy-ball Momentum, but the evaluation score of Adam is equal to the evaluation score of the heavy-ball momentum. (2 marks)
+		\begin{answer}
+			Your answer ...
+		\end{answer}
+	\end{enumerate}
+	\newpage
+	\item The test function \verb|q23()| runs your implementation on the digits dataset.
+	\begin{enumerate}[label=2.2.b.\roman*]
+		\item Include the figures generated by \verb|q23()| in your \verb|PA2_qa.pdf| file. (2 marks)
+		\begin{figure*}[h]
+			\centering
+			\includegraphics[height=3.2in]{image.png}
+			\caption{Figures generated by q23().}
+		\end{figure*}
+	\end{enumerate}
+\end{enumerate}
+\newpage
+\section{K-Means Clustering (Bonus)}\label{clus}
+No Written part.
+\section{Discussion}\label{disc}
+\begin{enumerate}[label=\ref{disc}.\alph*]
+	\item How much time did you spend on each part of this assignment? (1 mark)
+	\begin{answer}
+		Your answer ...
+	\end{answer}
+	\item Any additional feedback? (optional)
+	\begin{answer}
+		Your answer ...
+	\end{answer}
+\end{enumerate}
+\end{document}

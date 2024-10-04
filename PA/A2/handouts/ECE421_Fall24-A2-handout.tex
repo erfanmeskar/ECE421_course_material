@@ -1,0 +1,456 @@
+\documentclass{article}
+
+%Linux command prompt showing package
+\usepackage{listings,menukeys}
+
+%Page format
+\usepackage{pdfpages,fancyhdr}
+\usepackage[margin=1in]{geometry}
+
+%Math packages and custom commands
+\usepackage{algpseudocode,amsmath,framed,tikz,sans,mathtools,amsthm,enumitem,amssymb,dsfont,tabularray,fancyvrb}
+\usepackage[hidelinks]{hyperref}
+\usepackage[table,xcdraw]{xcolor}
+%\usepackage[labelformat=empty]{caption}
+\usepackage[utf8]{inputenc}
+\usetikzlibrary{arrows.meta}
+\usepackage[TABcline]{tabstackengine}
+\TABstackMath
+
+
+\usepackage[table]{xcolor}
+\usepackage{collcell}
+\usepackage{hhline}
+\usepackage{pgf}
+\usepackage{multirow}
+
+\def\colorModel{hsb}
+\newcommand\ColCell[1]{
+	\pgfmathparse{#1<50?1:0}  %Threshold for changing the font color into the cells
+	\ifnum\pgfmathresult=0\relax\color{white}\fi
+	\pgfmathsetmacro\compA{0}      %Component R or H
+	\pgfmathsetmacro\compB{#1/100} %Component G or S
+	\pgfmathsetmacro\compC{1}      %Component B or B
+	\edef\x{\noexpand\centering\noexpand\cellcolor[\colorModel]{\compA,\compB,\compC}}\x #1
+} 
+\newcolumntype{E}{>{\collectcell\ColCell}m{0.4cm}<{\endcollectcell}}  %Cell width
+\newcommand*\rot{\rotatebox{90}}
+
+%Course Info
+\newcommand{\coursenumber}{ECE421}
+\newcommand{\coursename}{\coursenumber: Introduction to Machine Learning}
+\newcommand{\courseyear}{2024}
+\newcommand{\coursesemester}{Fall}
+\newcommand{\coursefullname}{\coursename~---~\coursesemester~\courseyear}
+%Handout Info
+\newcommand{\haname}{Due Date: Friday, October 18, 11:59 PM}
+\newcommand{\hatypeandnun}{Assignment 2: Gradient Descent, Multiclass Logistic Regression, and K-Means}
+
+
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcommand{\probP}{\mathds{P}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\text{Var}}
+\DeclareMathOperator{\Cov}{\text{Cov}}
+\renewcommand{\arraystretch}{1.3}
+\newcommand{\norm}[2][2]{\| #2\|_{#1}}
+
+\newcommand{\notp}{\neg p}
+\newcommand{\notq}{\neg q}
+\newcommand{\notr}{\neg r}
+\newcommand{\notP}{\neg P}
+\newcommand{\notQ}{\neg Q}
+
+\newcommand{\con}{\wedge}
+\newcommand{\dis}{\vee}
+\newcommand{\false}{\text{F}}
+\newcommand{\terue}{\text{T}}
+
+% verbatim
+\DefineShortVerb{\|}
+\SaveVerb{py}|Python|
+\SaveVerb{num}|NumPy|
+\SaveVerb{sci}|scikit-learn|
+\SaveVerb{tp1}|test_Part1()|
+\SaveVerb{tp2}|test_Part2()|
+
+\definecolor{shadecolor}{gray}{0.9}
+
+\theoremstyle{definition}
+\newtheorem*{answer}{Answer}
+\newcommand{\note}[1]{\noindent{[\textbf{NOTE:} #1]}}
+\newcommand{\hint}[1]{\noindent{[\textbf{HINT:} #1]}}
+\newcommand{\recall}[1]{\noindent{[\textbf{RECALL:} #1]}}
+\newcommand{\expect}[1]{\noindent{[\textbf{What we expect:} #1]}}
+\newcommand{\mysolution}[1]{\noindent{\begin{shaded}\textbf{Your Solution:}\ #1 \end{shaded}}}
+
+\newlist{question}{enumerate}{3}
+\setlist[question, 1]{label=\Large \textbf{Q\arabic{questioni}.}, leftmargin=\parindent, rightmargin=10pt}
+\setlist[question, 2]{label=\large \textbf{\arabic{questioni}.\alph{questionii}.}, leftmargin=15pt, rightmargin=15pt}
+\setlist[question, 3]{label=\textbf{\arabic{questioni}.\alph{questionii}.\kern1.5pt\roman{questioniii}.},	leftmargin=30pt, rightmargin=30pt}
+
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+	\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+
+\title{\vspace{-2.5cm}\textbf{\coursefullname}\\\hatypeandnun\\\haname}
+\date{}
+
+%\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{\coursenumber~\coursesemester~\courseyear~---~\hatypeandnun}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\pagestyle{fancy}
+\setlength{\parindent}{0pt}
+
+% NOTE(joe): This environment is credit @pnpo (https://tex.stackexchange.com/a/218450)
+\lstnewenvironment{algorithm}[1][] %defines the algorithm listing environment
+{   
+	\lstset{ %this is the stype
+		mathescape=true,
+		frame=tB,
+		numbers=left, 
+		numberstyle=\tiny,
+		basicstyle=\rmfamily\scriptsize, 
+		keywordstyle=\color{black}\bfseries,
+		keywords={,procedure, div, mod, for, to, input, output, return, datatype, function, in, if, else, foreach, while, begin, end, } %add the keywords you want, or load a language as Rubens explains in his comment above.
+		numbers=left,
+		xleftmargin=.04\textwidth,
+		#1 % this is to add specific settings to an usage of this environment (for instnce, the caption and referable label)
+	}
+}
+{}
+
+\begin{document}
+
+\maketitle
+\vspace*{-2cm}
+\section*{Objectives}
+In this assignment, you will implement your own (small) version of \verb|PyTorch| library in the \verb|myTorch.py| file.\\
+
+You will be implementing the following algorithms using \UseVerb{py} and functions in the \UseVerb{num} library only: 
+\begin{itemize}
+	\item four versions of stochastic gradient descent, namely, \textbf{SGD}, \textbf{Heavy-ball Momentum}, \textbf{Nestrov Momentum}, and \textbf{ADAM},
+	\item \textbf{Multiclass Logistic Regression}, and
+	\item \textbf{K-Means} (Bonus)
+\end{itemize}
+You will also be asked to answer several questions related to your implementations.\\
+
+To avoid any potential installation issue, you are encouraged to develop your solution using Google Colab notebooks.
+\section*{Requirements}
+In your implementations, please use the function prototype provided (\textit{i.e.} name of the function, inputs and
+outputs) in the detailed instructions presented in the starter-code and the remainder of this document. We will be testing your
+code using a test function that which evokes the provided function prototype. If our testing file is unable to
+recognize the function prototype you have implemented, you can lose significant portion of your marks. In
+the  assignment folder, the following files are included in the \verb|starter_code| folder:
+\begin{itemize}
+	\item \verb|myTorch.py|
+	\item \verb|util.py|
+	\item \verb|test_A2.py|
+\end{itemize}
+These  files contain the test function and an outline of the functions that you will be implementing. You also
+need  to submit a separate \verb|PA2_qa.pdf| file that answer questions related to your implementations.
+\section{Gradient Descent}
+In the \verb|myTorch.py| file, you will complete the \verb|Optimizer| class implementation, which will be used in the \verb|MultiClassLogisticRegression| class to train a logistic regression model. We implemented the constructor method, \emph{i.e.}, the \verb|__init__| method, of the \verb|Optimizer| class for you in the starter code.\footnote{The constructor is executed at the time of object creation and sets value to the object's attributes.}
+\SaveVerb{sgd}|Optimizer.sgd|
+\subsection{\UseVerb{sgd} method}\label{partsgd}
+In this part, you should implement the  \verb|Optimizer.sgd| method. Specifically, you will be implementing the function listed below. For more instructions and hints, see the comments in the \verb|myTorch.py| file.
+\begin{itemize}
+	\item{\verb|sgd(self, gradient)|\\\textbf{Function implementation considerations:}
+		This function computes the update vector that will be used by gradient descent algorithm (\emph{i.e.}, $-\eta \nabla_{\!\underline{x}}f(\underline{x}_t)$, where $\eta$ denotes the learning rate). 
+		Useful attributes for implementing this function is: 
+		\begin{itemize}
+			\item \verb|self.lr|: the learning rate.
+		\end{itemize}}
+\end{itemize}
+For evaluation, we provide you the test functions \verb|q1()|, \verb|q2()|, \verb|q3()|, and \verb|q4()| in \verb|tests_A2.py| file. Go over these test functions and the function \verb|test_sgd| in the \verb|tests_A2.py| file to better understand what these functions do and \textbf{answer the following question(s)} after running these tests. Write and save your answers in a separate \verb|PA2_qa.pdf| file. Remember
+to submit this file together with your code.
+\begin{enumerate}[label=\ref{partsgd}.\alph*)]
+	\item The test function \verb|q1()| runs your SGD implementation with four different learning rates to find $w^\star = \underset{w}{\arg \min} f(w) = 10w^2 + 20w + 10$. The starting point used by this test is $w_0=5$ and the maximum number of iteration is set to $20$. This function reports the value of $w^\star$ together with some other information on your screen. \verb|q1()| should show slow convergence for learning rates $0.001$ and $0.005$, and faster convergence with learning rates $0.01$ and $0.05$.
+	\begin{enumerate}[label=1.1.a.\roman*)]
+		\item Describe the termination criteria used in the \verb|test_sgd| function in the \verb|tests_A2.py| file. (1 marks)
+		\item Include the figures generated by \verb|q1()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\item With learning rate $\eta=0.05$, what would be the value of $w_1$, \textit{i.e.}, after one iteration of SGD update. Show your mathematical process. If you implemented SGD correctly, the figures generated by \verb|q1()| should verify your $w_1$. (1 marks)
+	\end{enumerate}
+	\item The test function \verb|q2()| runs your SGD implementation with four different learning rates to find $w^\star = \underset{w}{\arg \min} f(w) = 22w^2 + 44w + 22$. The starting point used by this test is $w_0=5$, and the maximum number of iteration is set to $35$. This function reports the value of $w^\star$ together with some other information on your screen. With a correct implementation of SGD, \verb|q2()| must show that SGD stopped after $35$ iteration without meeting the convergence criterion with $\eta=0.001$ and $\eta=0.005$. However, with $\eta = 0.01$, you should be able to find the optimal solution with smaller number of iterations.
+	\begin{enumerate}[label=1.2.b.\roman*)]
+		\item Include the figures generated by \verb|q2()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\item When $\eta=0.05$, SGD would fail to converge to the optimal solution. What causes such behavior? (1 marks)
+	\end{enumerate}
+	\item The test function \verb|q3()| runs your SGD implementation with four different learning rates to find $w^\star = \underset{w}{\arg \min} f(w) = 10w^2 + 10\sin(\pi w)$. The starting point used by this test is $w_0=5$, and the maximum number of iteration is set to $2000$. This function reports the value of $w^\star$ together with some other information on your screen. With a correct implementation of SGD, \verb|q3()| must show that SGD fails to converge to the global optimum point with these four learning rate values.
+	\begin{enumerate}[label=1.2.c.\roman*)]
+		\item Include the figures generated by \verb|q3()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\item In 1-2 sentences describe the behavior of SGD in \verb|q3()| when $\eta=0.001, 0.005$, and $0.01$. Explain why SGD fails to find the global optimum point? (1 marks)
+		\item In 1-2 sentences describe the behavior of SGD in \verb|q3()| when $\eta=0.05$. (1 marks)
+	\end{enumerate}
+	\item The test function \verb|q4()| runs your SGD implementation with four different learning rates to find $\underline{w}^\star = \underset{\underline{w}}{\arg \min} f(\underline{w}) = 2w_1^2 + 0.2w_2^2$. The starting point used by this test is $\underline{w}_0=(3,3)$, and the maximum number of iteration is set to $500$. This function reports the value of $w^\star$ together with some other information on your screen.
+	\begin{enumerate}[label=1.2.d.\roman*)]
+		\item Include the figures generated by \verb|q4()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\item In 1-2 sentences describe the behavior of SGD in \verb|q3()| when $\eta=0.005$ and $0.01$. How is this behavior related to the stretched nature of the function $f(\underline{w})$? (1 marks)
+		\item In 1-2 sentences describe the behavior of SGD in \verb|q3()| when $\eta=0.03$. (1 marks)
+	\end{enumerate}
+\end{enumerate}
+The following is the mark breakdown for Part~\ref{partsgd}:
+\begin{enumerate}[label=(\roman*)]
+	\item Test file successfully runs the test \verb|q1()|, \verb|q2()|, and \verb|q3()|: 3 marks
+	\item Test file successfully runs the test \verb|q4()|: 2 marks
+	\item Outputs of all four tests are close to the expected output: 4 marks
+	\item Code content is organized well and annotated with comments: 1 marks
+	\item Questions are answered correctly: 10 marks
+\end{enumerate}
+
+\SaveVerb{mom}|Optimizer.heavyball_momentum|
+\SaveVerb{nes}|Optimizer.nestrov_momentum|
+\subsection{\UseVerb{mom} and \UseVerb{nes} methods}\label{mom}
+In this part, you should implement the  \verb|Optimizer.heavyball_momentum| method. Note that the implementations of \verb|Optimizer.heavyball_momentum| and \verb|Optimizer.nestrov_momentum| are identical. This is due to the fact that the only difference between these two variants of SGD is in their input gradient vector. Specifically, you will be implementing the function listed below. For more instructions and hints, see the comments in the \verb|myTorch.py| file.
+\begin{itemize}
+	\item{\verb|heavyball_momentum(self, gradient)|\\\textbf{Function implementation considerations:}
+		This function computes the update vector that will be used by gradient descent with heavy ball momentum (\emph{i.e.}, $-\eta \nabla_{\!\underline{x}}f(\underline{x}_t) + \gamma v_{t-1}$, where $\eta$ denotes the learning rate, $\gamma$ denotes the momentum parameter, and $v_{t-1}$ denotes the previous update vector). 
+		Useful attributes for implementing this function is: 
+		\begin{itemize}
+			\item \verb|self.lr| and \verb|self.gama|: the learning rate and the momentum parameter.
+			\item \verb|self.v|: this attribute can be used to record the last momentum (\emph{i.e.}, update) vector. 
+	\end{itemize}}
+\end{itemize}
+For evaluation, we provide you the test functions \verb|q5()|, \verb|q6()|, \verb|q7()|, and \verb|q8()| in \verb|tests_A2.py| file. Go over these test functions and the function \verb|test_momentum| in the \verb|tests_A2.py| file to better understand what these functions do and \textbf{answer the following question(s)} after running these tests. Write and save your answers in a separate \verb|PA2_qa.pdf| file. Remember to submit this file together with your code.
+\begin{enumerate}[label=\ref{mom}.\alph*)]
+	\item The test function \verb|q5()| runs your Heavy-ball Momentum implementation with four different learning rates to find $w^\star = \underset{w}{\arg \min} f(w) = 10w^2 + 10\sin(\pi w)$. The starting point used by this test is $w_0=5$ and the maximum number of iteration is set to $2000$. This function reports the value of $w^\star$ together with some other information on your screen.
+	\begin{enumerate}[label=1.2.a.\roman*)]
+		\item Include the figures generated by \verb|q5()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\item In 1-2 sentences, compare the performance of SGD with and without heavy-ball momentum by comparing the outcome of tests \verb|q3()| and \verb|q5()| (2 marks)
+	\end{enumerate}
+	\item The test function \verb|q6()| runs your Heavy-ball Momentum implementation with four different learning rates to find $\underline{w}^\star = \underset{\underline{w}}{\arg \min} f(\underline{w}) = 2w_1^2 + 0.2w_2^2$. The starting point used by this test is $\underline{w}_0=(3,3)$, and the maximum number of iteration is set to $500$. This function reports the value of $w^\star$ together with some other information on your screen.
+	\begin{enumerate}[label=1.2.b.\roman*)]
+		\item Include the figures generated by \verb|q4()| in your \verb|PA2_qa.pdf| file. (1 marks)
+	\end{enumerate}
+	\item The test function \verb|q7()| runs the Nestrov Momentum implementation with four different learning rates to find $w^\star = \underset{w}{\arg \min} f(w) = 10w^2 + 10\sin(\pi w)$. The starting point used by this test is $w_0=5$ and the maximum number of iteration is set to $2000$. This function reports the value of $w^\star$ together with some other information on your screen.
+	\begin{enumerate}[label=1.2.c.\roman*)]
+		\item Include the figures generated by \verb|q5()| in your \verb|PA2_qa.pdf| file. (1 marks)
+	\end{enumerate}
+	\textbf{[Note:} You do not need to implement \verb|Optimizer.nestrov_momentum|. We had already taken care of that method. Check out the \verb|test_momentum| function in the \verb|tests_A2.py| file to see how we use different gradient vectors for gradient descent with Heavy-ball and Nestrov Momentum.\textbf{]}
+	\item The test function \verb|q8()| runs your Nestrov Momentum implementation with four different learning rates to find $\underline{w}^\star = \underset{\underline{w}}{\arg \min} f(\underline{w}) = 2w_1^2 + 0.2w_2^2$. The starting point used by this test is $\underline{w}_0=(3,3)$, and the maximum number of iteration is set to $500$. This function reports the value of $w^\star$ together with some other information on your screen.
+	\begin{enumerate}[label=1.2.d.\roman*)]
+		\item Include the figures generated by \verb|q4()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\item In 1-2 sentences, compare the performance of Nestrov Momentum with the heavy-ball momentum by comparing the outcome of tests \verb|q5()| and \verb|q6()| with that of \verb|q7()| and \verb|q8()|. (1 marks)
+	\end{enumerate}
+\end{enumerate}
+The following is the mark breakdown for Part~\ref{mom}:
+\begin{enumerate}[label=(\roman*)]
+	\item Test file successfully runs the test \verb|q5()|, \verb|q6()|, \verb|q7()|, and \verb|q8()|: 4 marks
+	\item Outputs of all four tests are close to the expected output: 4 marks
+	\item Code content is organized well and annotated with comments: 1 marks
+	\item Questions are answered correctly: 7 marks
+\end{enumerate}
+\SaveVerb{adam}|Optimizer.adam|
+\subsection{\UseVerb{adam} method}\label{adam}
+In this part, you will be implementing the fourth variation of gradient descent by implementing the \verb|Optimizer.adam| method in the \verb|myTorch.py| file. Adam is a variant of stochastic optimization that only requires first-order gradients with little memory requirement. Below is an excerpt from the paper ``Adam: A Method for Stochastic Optimization,'' by Diederik P. Kingma and Jimmy Ba.
+\begin{quote}
+	[Adam] computes individual adaptive learning rates for
+	different parameters from estimates of first and second moments of the gradients; the name Adam
+	is derived from adaptive moment estimation. [Adam] is designed to combine the advantages
+	of two recently popular methods: AdaGrad , which works well with sparse gradients, and RMSProp, which works well in on-line and non-stationary
+	settings.
+	
+	Some of Adam's advantages are that the magnitudes of parameter updates are invariant to
+	rescaling of the gradient, its stepsizes are approximately bounded by the stepsize hyperparameter,
+	it does not require a stationary objective, it works with sparse gradients, and it naturally performs a
+	form of step size annealing.
+\end{quote}
+
+Like the other three methods, \verb|Optimizer.adam| should return the update vector by which you increment the model's weights. So, you should implement the following pseudo-code:
+\begin{algorithm}[caption={\UseVerb{adam} method. $\underline{a} \odot \underline{a}$ indicates the elementwise	square of the vector $\underline{a}$. With $\beta_v^t$ and $\beta_m^t$ we denote $\beta_v$ and $\beta_m$ to the power $t$.}]
+	procedure $\textbf{sgd}(\nabla_{\!\underline{w}}f(\underline{w}_t))$
+	$\underline{m}_{t+1} \leftarrow (1 - \beta_m) \nabla_{\!\underline{w}}f(\underline{w}_t) + \beta_m \underline{m}_t$
+	$\underline{v}_{t+1} \leftarrow (1 - \beta_v)  \nabla_{\!\underline{w}}f(\underline{w}_t) \odot \nabla_{\!\underline{w}}f(\underline{w}_t)  + \beta_v \underline{v}_t$
+	$\hat{\underline{m}}_{t+1} \leftarrow \frac{\underline{m}_{t+1}}{1-\beta_m^t}$
+	$\hat{\underline{v}}_{t+1} \leftarrow \frac{\underline{v}_{t+1}}{1-\beta_v^t}$
+	$t \leftarrow t+1$
+	$\text{update} = -\frac{\eta \hat{\underline{m}}_{t+1}} {\sqrt{\hat{\underline{v}}_{t+1}} + \epsilon}$ $\backslash \backslash$ $\eta$ is the learning rate. The division and the square root are element-wise.
+	return $\text{update}$
+\end{algorithm}
+you will be implementing the function listed below. For more instructions and hints, see the comments in the \verb|myTorch.py| file.
+	\begin{itemize}
+	\item{\verb|adam(self, gradient)|\\\textbf{Function implementation considerations:}
+		This function computes the update vector that will be used by Adam.	Useful attributes for implementing this function is: 
+		\begin{itemize}
+			\item  \verb|self.lr|, \verb|self.beta_m|, \verb|self.beta_v|, and \verb|self.epsilon|
+			\item \verb|self.m|, \verb|self.v|, and \verb|self.t|: these attributes can be used to record the last first and second moment of the gradient and time step t.
+		\end{itemize}}
+		Furthermore, useful functions in \verb|NumPy| for implementing this method are:
+		\begin{itemize}
+			\item \verb|square|: to find the element-wise square of a vector
+			\item \verb|sqrt|: to find the element-wise square root of a vector
+		\end{itemize}
+	\end{itemize}
+For evaluation, we provide you the test functions \verb|q9()|, \verb|q10()|, and \verb|q11()| in \verb|tests_A2.py| file. Go over these test functions and the function \verb|test_sgd| in the \verb|tests_A2.py| file to better understand what these functions do and \textbf{answer the following question(s)} after running these tests. Write and save your answers in a separate \verb|PA2_qa.pdf| file. Remember to submit this file together with your code.
+\begin{enumerate}[label=\ref{adam}.\alph*)]
+	\item The test function \verb|q9()| runs your Adam implementation with four different learning rates to find $w^\star = \underset{w}{\arg \min} f(w) = 2w_1^2 + 0.2w_2^2$. The starting point used by this test is $\underline{w}_0=(3,3)$, and the maximum number of iteration is set to $500$. This function reports the value of $w^\star$ together with some other information on your screen.
+	\begin{enumerate}[label=1.3.a.\roman*)]
+		\item Include the figures generated by \verb|q9()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\item In 1-2 sentences, compare the performance of adam with momentum method (heavy-ball or Nestrov) (2 marks)
+	\end{enumerate}
+	\item The test function \verb|q10()| runs your Adam implementation with four different learning rates to find $\underline{w}^\star = \underset{\underline{w}}{\arg \min} f(\underline{w}) = 1000(2w_1^2 + 0.2w_2^2)$. This function is the scaled version of the function used in test \verb|q9()|. The starting point used by this test is $\underline{w}_0=(3,3)$, and the maximum number of iteration is set to $500$. This function reports the value of $w^\star$ together with some other information on your screen.
+	\begin{enumerate}[label=1.3.b.\roman*)]
+		\item Include the figures generated by \verb|q10()| in your \verb|PA2_qa.pdf| file. (1 marks)
+		\item Based on the outcome of \verb|q9()| and \verb|q10()|, describe the advantage of Adam in 1-2 sentence. (2 marks) \hint{run \verb|q11()| to see what could be the impact of scaling the function (or gradients) on the other optimization method such as gradient descent with Nestrov Momentum. You don't need to report the output of \verb|q11()| in your report. Also, note that \verb|q11()| would most often result in error. Don't worry. That is intentional. Try to understand why this happens.}
+	\end{enumerate}
+\end{enumerate}
+The following is the mark breakdown for Part~\ref{adam}:
+\begin{enumerate}[label=(\roman*)]
+	\item Your code successfully passes the test \verb|q9()|, \verb|q10()|: 4 marks
+	\item Outputs of tests \verb|q9()| and \verb|q10()| are close to the expected output: 4 marks
+	\item Code content is organized well and annotated with comments: 1 marks
+	\item Questions are answered correctly: 6 marks
+\end{enumerate}
+\pagebreak
+\section{Multiclass Logistic Regression}\label{logis}
+
+In the \verb|myTorch.py| file, you will complete the \verb|MultiClassLogisticRegression| class implementation. 
+
+\subsection{Implementing the Learning Model}
+In this part, you will be implementing the functions listed below. For more instructions and hints, see the comments in the \verb|myTorch.py| file.
+\begin{itemize}
+	\item{\verb|add_bias(self, X)|\\\textbf{Function implementation considerations:}
+		This function inserts a column of $1$'s to $X$. 
+		useful functions in \verb|NumPy| for implementing this method are:
+		\begin{itemize}
+			\item \verb|insert|: Inserts values along the given axis before the given indices.
+	\end{itemize}
+	For evaluation, we provide you the test function \verb|q12()|.}
+	\item{\verb|unique_classes_(self, y)|\\\textbf{Function implementation considerations:}
+		This function returns a list that contains the unique elements in \verb|y|.
+		useful functions in \verb|NumPy| for implementing this method are:
+		\begin{itemize}
+			\item \verb|unique|: Finds the unique elements of an array.
+		\end{itemize}}
+	\item{\verb|class_labels_(self, classes)|\\\textbf{Function implementation considerations:}
+		This function returns a dictionary with elements of the list \verb|classes| as its keys and a unique integer from $0$ to the total number of classed as their values. For instance, if \verb|classes = ['blue', 'red', 'yellow']|, then 
+		\begin{center}
+			\verb|class_labels_(classes) = {'blue': 0, 'red': 1, 'yellow': 2}|
+		\end{center}}
+	\item{\verb|one_hot(self, y)|\\\textbf{Function implementation considerations:}
+		This function returns the one-hot encoded version of \verb|y|.
+		Useful attributes for implementing this method are:
+		\begin{itemize}
+			\item \verb|self.class_labels|: A dictionary with each class as its keys and a unique integer from $0$ to the total number of classed as their values.
+	\end{itemize}
+	For evaluation, we provide you the test function \verb|q13()|.}
+	\item{\verb|softmax(self, z)|\\\textbf{Function implementation considerations:}
+	This function is the softmax function, which converts each row of the input matrix \verb|z| into a probability distribution. Thus, if \verb|z|$\in \mathbb{R}^{n \times c}$ ,then \verb|softmax(z)| returns a matrix in $\mathbb{R}^{n \times c}$, where each element is non-negative and each row of the returned matrix should sum to $1$. Standard \verb|NumPy| functions like \verb|exp()|, \verb|sum|. etc can be used.
+
+	For evaluation, we provide you the test function \verb|q14()|.}
+	
+	\item{\verb|predict_with_X_aug_(self, X)|\\\textbf{Function implementation considerations:}
+		This function returns the predicted probability distribution for each datapoint in \verb|X|, \textit{i.e.}, each row of \verb|X|, based on the model's weight parameter. Note that the input to this function must be an augmented input matrix. Assuming that input $X \in \mathbb{R}^{M \times (d+1)}$ and model's weight, i.e., \verb|self.weights| is in $\mathbb{R}^{c \times (d+1)},$\footnote{each row corresponds to the weight parameter of a class} \verb|predict_with_X_aug_(X)| returns a matrix in $\mathbb{R}^{M \times c}$, where each row of it is a valid probability distribution.
+		
+		For evaluation, we provide you the test function \verb|q15()|.}
+	\item{\verb|predict(self, X)|\\\textbf{Function implementation considerations:}
+		This function returns the predicted probability distribution for each datapoint in \verb|X|, \textit{i.e.}, each row of \verb|X|, based on the model's weight parameter. Note that the input to this function is not an augmented input. Assuming that input $X \in \mathbb{R}^{M \times (d)}$ and model's weight, \textit{i.e.}, \verb|self.weights| is in $\mathbb{R}^{c \times (d+1)},$ \verb|predict(X)| returns a matrix in $\mathbb{R}^{M \times c}$, where each row of it is a valid probability distribution. Useful methods for implementing this method are:
+		\begin{itemize}
+			\item \verb|self.add_bias|
+			\item \verb|self.predict_with_X_aug_|
+		\end{itemize}
+		
+		For evaluation, we provide you the test function \verb|q16()|.}
+	\item{\verb|predict_classes(self, X)|\\\textbf{Function implementation considerations:}
+			This function returns the predicted class for each datapoint in \verb|X|, \textit{i.e.}, each row of \verb|X|, based on the model's weight parameter. Note that the input to this function is not an augmented input. Assuming that input $X \in \mathbb{R}^{M \times (d)}$ and model's weight, \textit{i.e.}, \verb|self.weights| is in $\mathbb{R}^{c \times (d+1)},$ \verb|predict_classes(X)| returns an \verb|numpy ndarray| with $M$ elements, where each element denotes the predicted class for one of the datapoints. The predicted class, is the class with highest predicted probability. Useful methods for implementing this method are:
+			\begin{itemize}
+				\item \verb|self.predict|
+				\item \verb|argmax| form \verb|NumPy|
+			\end{itemize}
+			
+			For evaluation, we provide you the test function \verb|q17()|.}
+		\item{\verb|score(self, X, y)|\\\textbf{Function implementation considerations:}
+			This function returns the ratio of the datapoints in X that are correctly classified by your model, \textit{i.e.}, the predicted class is derived by \verb|predict_classes| function matches the true class specified in \verb|y|. Note that \verb|X| is not augmented.  Useful methods for implementing this method are:
+			\begin{itemize}
+				\item \verb|self.predict_classes|
+			\end{itemize}
+			
+			For evaluation, we provide you the test function \verb|q18()|.}
+			\item{\verb|evaluate_(self, X_aug, y_one_hot_encoded)|\\\textbf{Function implementation considerations:}
+				This function returns the ratio of the datapoints that are correctly classified by your model. Note that the input data batch to \verb|evaluate_| is augmented and the true labels are one-hot-encoded. Useful methods for implementing this method are:
+				\begin{itemize}
+					\item \verb|self.predict_with_X_aug_|
+					\item \verb|argmax| form \verb|NumPy|
+				\end{itemize}
+				
+				For evaluation, we provide you the test function \verb|q19()|.}
+			\item{\verb|cross_entropy(self, y_one_hot_encoded, probs)|\\\textbf{Function implementation considerations:}
+				This function returns the cross entropy error given the one-hot-encoded version of the true labels and the predicted probabilities. Therefore, for a batch of $M$ datapoitns, \verb|y_one_hot_encoded| is a $M$ by $c$ matrix and \verb|probs| is a $M$ by $c$ matrix, where each row contains the predicted probability distribution for a datapoint in the batch.
+				
+				For evaluation, we provide you the test function \verb|q20()|.}
+			\item{\verb|compute_grad(self, X, y_one_hot_encoded, w)|\\\textbf{Function implementation considerations:}
+				Given an augmented batch of data \verb|X| in $\mathbb{R}^{M\times (d+1)}$, the one-hot-encoded true labels of the data batch, and the weight parameters \verb|w| in $\mathbb{R}^{c \times (d+1)}$ where $c$ denote the number of classes, this function returns the gradients of $E_{\text{in}}$ at \verb|w|. Therefore, it returns a matrix in  $\mathbb{R}^{c \times (d+1)}$.
+				
+				For evaluation, we provide you the test function \verb|q21()|.}
+\end{itemize}
+The following is the mark breakdown for Part~\ref{logis}:
+\begin{enumerate}[label=(\roman*)]
+	\item Your code successfully passes the test \verb|q12()| to \verb|q20()|: 9 marks
+	\item Your code successfully passes the test \verb|q21()|: 2 marks
+	\item Code content is organized well and annotated with comments: 1 marks
+\end{enumerate}
+\subsection{Implementing the Learning Algorithm}\label{fit}
+In this part, you will be implementing the functions listed below. 
+\begin{itemize}
+	\item{\verb|fit|\\\textbf{Function implementation considerations:}
+		This function fits the logistic regression model to the input dataset. For more instructions and hints, see the comments in the \verb|myTorch.py| file. 
+		Useful functions in \verb|NumPy| for implementing this method are:
+		\begin{itemize}
+			\item \verb|random.choice|
+			\item \verb|abs|
+			\item \verb|max|
+		\end{itemize}
+		}
+\end{itemize}
+For evaluation, we provide you the test functions \verb|q22()| and \verb|q23()| in \verb|tests_A2.py| file. Go over these test functions and the function \verb|train_model| in the \verb|util.py| file to better understand what these functions do and \textbf{answer the following question(s)} after running these tests. Write and save your answers in a separate \verb|PA2_qa.pdf| file. Remember to submit this file together with your code.
+\begin{enumerate}[label=\ref{fit}.\alph*]
+	\item \label{ee}The test function \verb|q22()| runs your implementation on the Iris dataset.
+	\begin{enumerate}[label=\ref{ee}.\roman*]
+		\item Include the figures generated by \verb|q22()| in your \verb|PA2_qa.pdf| file. (2 marks)
+		\item In 1-2 sentences, compare the performance of the four variants of gradient descent on this dataset (2 marks)
+		\item In 1-2 sentences, explain how is it possible that the loss derived by the Adam optimizer is smaller than that of Heavy-ball Momentum, but the evaluation score of Adam is equal to the evaluation score of the heavy-ball momentum. (2 marks)
+	\end{enumerate}
+	\item \label{eee}The test function \verb|q23()| runs your implementation on the digits dataset.
+	\begin{enumerate}[label=\ref{eee}.\roman*]
+		\item Include the figures generated by \verb|q23()| in your \verb|PA2_qa.pdf| file. (2 marks)
+	\end{enumerate}
+\end{enumerate}
+The following is the mark breakdown for Part~\ref{logis}:
+\begin{enumerate}[label=(\roman*)]
+	\item Outputs of tests \verb|q22()| and \verb|q23()| are close to the expected output: 2 marks
+	\item Code content is organized well and annotated with comments: 1 mark
+	\item Questions are answered correctly: 8 marks
+\end{enumerate}
+\section{K-Means Clustering (Bonus)}\label{clus}
+Implement the kmeans function in the \verb|myTorch.py| file. You should initialize your $k$ cluster centers to random elements of examples.\\
+
+After a few iterations of k-means, your centers will be very dense vectors. In order for your code to run efficiently and to obtain full credit, you will need to precompute certain dot products for squared distance calculation. You might find \verb|generateClusteringExamples| in \verb|util.py| useful for testing your code.\\
+The following is the mark breakdown for Part~\ref{clus}:
+\begin{enumerate}[label=(\roman*)]
+	\item Your implementation performs well on the hidden tests (you do not have access to the hidden tests): 1.5 marks
+\end{enumerate}
+\section{Discussion}\label{disc}
+Please answer the following short questions so we can improve future assignments.
+\begin{enumerate}[label=\ref{disc}.\alph*]
+	\item How much time did you spend on each part of this assignment? (1 mark)
+	\item Any additional feedback? (optional)
+\end{enumerate}
+\section{Turning It In}
+You need to submit your version of the following files:
+\begin{itemize}
+	\item \verb|myTorch.py|
+	\item \verb|PA2_qa.pdf| that answer questions related to the implementations.
+	\item The cover file with your name and student ID filled.
+\end{itemize}
+Please pack them into a single folder, compress into a .zip file and name it as PA2.zip.
+\end{document}

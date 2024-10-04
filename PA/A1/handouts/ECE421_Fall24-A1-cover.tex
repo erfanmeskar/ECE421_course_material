@@ -1,0 +1,176 @@
+\documentclass{article}
+
+%Linux command prompt showing package
+\usepackage{listings,menukeys}
+
+%Page format
+\usepackage{pdfpages,fancyhdr}
+\usepackage[margin=1in]{geometry}
+
+%Math packages and custom commands
+\usepackage{algpseudocode,amsmath,framed,tikz,sans,mathtools,amsthm,enumitem,amssymb,dsfont,tabularray,fancyvrb}
+\usepackage[hidelinks]{hyperref}
+\usepackage[table,xcdraw]{xcolor}
+%\usepackage[labelformat=empty]{caption}
+\usepackage[utf8]{inputenc}
+\usetikzlibrary{arrows.meta}
+\usepackage[TABcline]{tabstackengine}
+\TABstackMath
+
+
+\usepackage[table]{xcolor}
+\usepackage{collcell}
+\usepackage{hhline}
+\usepackage{pgf}
+\usepackage{multirow}
+
+\def\colorModel{hsb}
+\newcommand\ColCell[1]{
+	\pgfmathparse{#1<50?1:0}  %Threshold for changing the font color into the cells
+	\ifnum\pgfmathresult=0\relax\color{white}\fi
+	\pgfmathsetmacro\compA{0}      %Component R or H
+	\pgfmathsetmacro\compB{#1/100} %Component G or S
+	\pgfmathsetmacro\compC{1}      %Component B or B
+	\edef\x{\noexpand\centering\noexpand\cellcolor[\colorModel]{\compA,\compB,\compC}}\x #1
+} 
+\newcolumntype{E}{>{\collectcell\ColCell}m{0.4cm}<{\endcollectcell}}  %Cell width
+\newcommand*\rot{\rotatebox{90}}
+
+%Course Info
+\newcommand{\coursenumber}{ECE421}
+\newcommand{\coursename}{\coursenumber: Introduction to Machine Learning}
+\newcommand{\courseyear}{2024}
+\newcommand{\coursesemester}{Fall}
+\newcommand{\coursefullname}{\coursename~---~\coursesemester~\courseyear}
+%Handout Info
+\newcommand{\haname}{Due Date: Thursday, September 26, 11:59 PM}
+\newcommand{\hatypeandnun}{Assignment 1: Pocket Algorithm and Linear Regression}
+
+
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcommand{\probP}{\mathds{P}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\text{Var}}
+\DeclareMathOperator{\Cov}{\text{Cov}}
+\renewcommand{\arraystretch}{1.3}
+\newcommand{\norm}[2][2]{\| #2\|_{#1}}
+
+\newcommand{\notp}{\neg p}
+\newcommand{\notq}{\neg q}
+\newcommand{\notr}{\neg r}
+\newcommand{\notP}{\neg P}
+\newcommand{\notQ}{\neg Q}
+
+\newcommand{\con}{\wedge}
+\newcommand{\dis}{\vee}
+\newcommand{\false}{\text{F}}
+\newcommand{\terue}{\text{T}}
+
+% verbatim
+\DefineShortVerb{\|}
+\SaveVerb{py}|Python|
+\SaveVerb{num}|NumPy|
+\SaveVerb{sci}|scikit-learn|
+\SaveVerb{tp1}|test_Part1()|
+\SaveVerb{tp2}|test_Part2()|
+
+\definecolor{shadecolor}{gray}{0.9}
+
+\theoremstyle{definition}
+\newtheorem*{answer}{Answer}
+\newcommand{\note}[1]{\noindent{[\textbf{NOTE:} #1]}}
+\newcommand{\hint}[1]{\noindent{[\textbf{HINT:} #1]}}
+\newcommand{\recall}[1]{\noindent{[\textbf{RECALL:} #1]}}
+\newcommand{\expect}[1]{\noindent{[\textbf{What we expect:} #1]}}
+\newcommand{\mysolution}[1]{\noindent{\begin{shaded}\textbf{Your Solution:}\ #1 \end{shaded}}}
+
+\newlist{question}{enumerate}{3}
+\setlist[question, 1]{label=\Large \textbf{Q\arabic{questioni}.}, leftmargin=\parindent, rightmargin=10pt}
+\setlist[question, 2]{label=\large \textbf{\arabic{questioni}.\alph{questionii}.}, leftmargin=15pt, rightmargin=15pt}
+\setlist[question, 3]{label=\textbf{\arabic{questioni}.\alph{questionii}.\kern1.5pt\roman{questioniii}.},	leftmargin=30pt, rightmargin=30pt}
+
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+	\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+
+\title{\vspace{-2.5cm}\textbf{\coursefullname}\\\hatypeandnun\\\haname}
+\date{}
+
+%\chead{}
+\rhead{\haname}
+\lfoot{}
+\cfoot{\coursenumber~\coursesemester~\courseyear~---~\hatypeandnun}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\pagestyle{fancy}
+\setlength{\parindent}{0pt}
+
+% NOTE(joe): This environment is credit @pnpo (https://tex.stackexchange.com/a/218450)
+\lstnewenvironment{algorithm}[1][] %defines the algorithm listing environment
+{   
+	\lstset{ %this is the stype
+		mathescape=true,
+		frame=tB,
+		numbers=left, 
+		numberstyle=\tiny,
+		basicstyle=\rmfamily\scriptsize, 
+		keywordstyle=\color{black}\bfseries,
+		keywords={,procedure, div, mod, for, to, input, output, return, datatype, function, in, if, else, foreach, while, begin, end, } %add the keywords you want, or load a language as Rubens explains in his comment above.
+		numbers=left,
+		xleftmargin=.04\textwidth,
+		#1 % this is to add specific settings to an usage of this environment (for instnce, the caption and referable label)
+	}
+}
+{}
+
+\begin{document}
+
+\maketitle
+\vspace*{-2cm}
+\section*{General Notes}
+\begin{enumerate}
+	\item Programming assignments can be done in groups of up to 2 students. Students can be in different sections.
+	\item Only one submission from a group member is required.
+	\item Group members will receive the same grade.
+	\item Unless permitted, no late submission is accepted.
+	\item Please post assignment-related questions on Piazza.
+\end{enumerate}
+
+\section*{Turning It In}
+You need to submit your version of the following files:
+\begin{itemize}
+	\item PerceptronImp.py
+	\item LinearRegressionImp.py
+	\item PA1\_qa.pdf that answer questions related to the implementations.
+	\item The cover file (this file) with their name and student ID filled.
+\end{itemize}
+Please pack them into a single folder, compress into a .zip file and name it as PA1.zip.
+
+\section*{Group Members}
+\begin{center}
+		\begin{tabular}{|p{4.5in}|p{2in}|}
+			\hline
+			Name (and Name on Quercus) & UTORid\\\hline
+			& \\
+			& \\
+			& \\
+			& \\
+			& \\
+			& \\\hline
+			& \\
+			& \\
+			& \\
+			& \\
+			& \\
+			& \\
+			\hline
+		\end{tabular}
+\end{center}
+\end{document}
