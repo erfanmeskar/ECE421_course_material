@@ -1,0 +1,175 @@
+\documentclass{article}
+
+%Linux command prompt showing package
+\usepackage{listings,menukeys}
+
+%Page format
+\usepackage{pdfpages,fancyhdr}
+\usepackage[margin=1in]{geometry}
+
+%Math packages and custom commands
+\usepackage{algpseudocode,amsmath,framed,tikz,sans,mathtools,amsthm,enumitem,amssymb,dsfont,tabularray,fancyvrb}
+\usepackage[short]{optidef}
+\usepackage[hidelinks]{hyperref}
+\usepackage[table,xcdraw]{xcolor}
+%\usepackage[labelformat=empty]{caption}
+\usepackage[utf8]{inputenc}
+\usetikzlibrary{arrows.meta}
+\usepackage[TABcline]{tabstackengine}
+\TABstackMath
+
+
+\usepackage[table]{xcolor}
+\usepackage{collcell}
+\usepackage{hhline}
+\usepackage{pgf}
+\usepackage{multirow}
+
+\def\colorModel{hsb}
+\newcommand\ColCell[1]{
+	\pgfmathparse{#1<50?1:0}  %Threshold for changing the font color into the cells
+	\ifnum\pgfmathresult=0\relax\color{white}\fi
+	\pgfmathsetmacro\compA{0}      %Component R or H
+	\pgfmathsetmacro\compB{#1/100} %Component G or S
+	\pgfmathsetmacro\compC{1}      %Component B or B
+	\edef\x{\noexpand\centering\noexpand\cellcolor[\colorModel]{\compA,\compB,\compC}}\x #1
+} 
+\newcolumntype{E}{>{\collectcell\ColCell}m{0.4cm}<{\endcollectcell}}  %Cell width
+\newcommand*\rot{\rotatebox{90}}
+
+%Course Info
+\newcommand{\coursenumber}{ECE421}
+\newcommand{\coursename}{\coursenumber: Introduction to Machine Learning}
+\newcommand{\courseyear}{2024}
+\newcommand{\coursesemester}{Fall}
+\newcommand{\coursefullname}{\coursename~---~\coursesemester~\courseyear}
+%Handout Info
+\newcommand{\haname}{}
+\newcommand{\hatypeandnun}{Worksheet 4: K-means Clustering and Gaussian Mixture Model}
+
+
+\DeclareMathOperator{\R}{\mathbb{R}}
+\newcommand{\probP}{\mathds{P}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{\text{Var}}
+\DeclareMathOperator{\Cov}{\text{Cov}}
+\renewcommand{\arraystretch}{1.3}
+\newcommand{\norm}[2][2]{\| #2\|_{#1}}
+
+\newcommand{\notp}{\neg p}
+\newcommand{\notq}{\neg q}
+\newcommand{\notr}{\neg r}
+\newcommand{\notP}{\neg P}
+\newcommand{\notQ}{\neg Q}
+
+\newcommand{\setD}{\mathcal{D}}
+\newcommand{\setR}{\mathbb{R}}
+\newcommand{\setRd}{\mathbb{R}^d}
+\newcommand{\setRdone}{\mathbb{R}^{d+1}}
+\renewcommand{\vec}[1]{\underline{#1}}
+\newcommand{\vecw}{\vec{w}}
+\newcommand{\vecx}{\vec{x}}
+\newcommand{\vecy}{\vec{y}}
+\newcommand{\vecxn}{\vec{x}_n}
+\newcommand{\setxnyn}{\left\{(\vecxn, y_n)\right\}_{n=1}^{N}}
+
+
+\newcommand{\con}{\wedge}
+\newcommand{\dis}{\vee}
+\newcommand{\false}{\text{F}}
+\newcommand{\terue}{\text{T}}
+
+% verbatim
+\DefineShortVerb{\|}
+\SaveVerb{py}|Python|
+\SaveVerb{num}|NumPy|
+\SaveVerb{sci}|scikit-learn|
+\SaveVerb{tp1}|test_Part1()|
+\SaveVerb{tp2}|test_Part2()|
+
+\definecolor{shadecolor}{gray}{0.9}
+
+\theoremstyle{definition}
+\newtheorem*{answer}{Answer}
+\newcommand{\note}[1]{\noindent{[\textbf{NOTE:} #1]}}
+\newcommand{\hint}[1]{\noindent{[\textbf{HINT:} #1]}}
+\newcommand{\recall}[1]{\noindent{[\textbf{RECALL:} #1]}}
+\newcommand{\remark}[1]{\noindent{[\textbf{REMARK:} #1]}}
+\newcommand{\expect}[1]{\noindent{[\textbf{What we expect:} #1]}}
+\newcommand{\mysolution}[1]{\noindent{\begin{shaded}\textbf{Your Solution:}\ #1 \end{shaded}}}
+
+\newlist{question}{enumerate}{3}
+\setlist[question, 1]{label=\Large \textbf{Q\arabic{questioni}}, leftmargin=\parindent, rightmargin=10pt}
+\setlist[question, 2]{label=\large \textbf{\arabic{questioni}.\alph{questionii}}, leftmargin=15pt, rightmargin=15pt}
+\setlist[question, 3]{label=\textbf{\arabic{questioni}.\alph{questionii}.\kern1.5pt\roman{questioniii}},	leftmargin=30pt, rightmargin=30pt}
+
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+	\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+
+\title{\vspace{-2.5cm}\textbf{\coursefullname}\\\hatypeandnun\\\haname}
+\date{}
+
+%\chead{}
+\rhead{\haname}
+\lfoot{}
+\cfoot{\coursenumber~\coursesemester~\courseyear~---~\hatypeandnun}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\pagestyle{fancy}
+\setlength{\parindent}{0pt}
+
+% NOTE(joe): This environment is credit @pnpo (https://tex.stackexchange.com/a/218450)
+\lstnewenvironment{algorithm}[1][] %defines the algorithm listing environment
+{   
+	\lstset{ %this is the stype
+		mathescape=true,
+		frame=tB,
+		numbers=left, 
+		numberstyle=\tiny,
+		basicstyle=\rmfamily\scriptsize, 
+		keywordstyle=\color{black}\bfseries,
+		keywords={,procedure, div, mod, for, to, input, output, return, datatype, function, in, if, else, foreach, while, begin, end, } %add the keywords you want, or load a language as Rubens explains in his comment above.
+		numbers=left,
+		xleftmargin=.04\textwidth,
+		#1 % this is to add specific settings to an usage of this environment (for instnce, the caption and referable label)
+	}
+}
+{}
+
+\begin{document}
+
+\maketitle
+\vspace*{-2cm}
+\begin{question}[start=1]
+	\item \textbf{(Lack of Optimality of $K$-Means)} Consider a $K$-Means clustering problem instance with $K = 2$ and a dataset of $4$ points in $\mathbb{R}$ as follows: $x_1 = -12$, $x_2 = -3$, $x_3 = 3$, and $x_4 = 12$. Initialize $K$-Means with the centroids $\mu_1 = -3$ and $\mu_2 = 12$.	Demonstrate that in the problem instance above, $K$-Means converges to a solution that is not globally optimal.
+	
+	\item \textbf{(K-means algorithm: Problem 6 - Final Exam 2018)} Consider the $K$-means algorithm. Let $K = 2$ and let $\mathcal{D}$ be a dataset consisting of four data points with $\mathcal{D} = \{0, 0.5, 0.5 + \Delta, 1.5 + \Delta\}$, where $\Delta \geq 0$ is a problem parameter. All data points lie on the real line.
+	\begin{question}
+		\item \label{parta}Let $\Delta = 0.5$ and initialize $K$-means by initializing the two cluster centers at $\mu_1 = 1$ and $\mu_2 = 2$. Run $K$-means till convergence. For each iteration $l$ until convergence, describe your set membership $\{\mathcal{B}_1[l], \mathcal{B}_2[l]\}$ and cluster centers $\{\mu_1[l], \mu_2[l]\}$. Make sure you identify the final values of the cluster centers and set membership at convergence.
+		\item For this part, find a condition that $\Delta$ must satisfy, such that $\Delta$ has a small positive value, and $K$-means (initialized in the same manner as in~\ref{parta}, \textit{i.e.}, $\mu_1 = 1$ and $\mu_2 = 2$) converges to a different solution from that obtained in~\ref{parta}. In your solution, describe:
+		\begin{question}
+			\item What is this condition on $\Delta$ and explain your reasoning/derivation.
+			\item As in~\ref{parta}, run the cluster algorithm, describe the values of cluster centers and set membership for each iteration until convergence.
+		\end{question}
+	\end{question}
+	
+	\item \textbf{(Gaussian Mixture Model: Problem 5 - Final Exam 2018)} Consider an already-trained Gaussian Mixture Model (GMM) that is trained to fit data on student performance in a class. The GMM uses two components ($K = 2$) as the class consists of two categories of students: undergraduate students (category 1) and graduate students (category 2). The learned parameters of the GMM are as follows.
+	\begin{itemize}
+		\item The weights of the two categories are $w_1 = \frac{2}{3}$ (undergraduate) and $w_2 = \frac{1}{3}$ (graduate).
+		\item The distribution that fits scores in category 1 is $\mathcal{N}\left(x; 70, 10^2\right)$.
+		\item The distribution that fits scores in category 2 is $\mathcal{N}\left(x; 80, 5^2\right)$.
+	\end{itemize}
+	\begin{question}
+		\item According to the GMM, what is the probability that an arbitrarily selected student scores greater than $80$\%? That is, compute $\probP[X \geq 80]$, where $X$ denotes the score of the student. In your computation, use the approximation that for zero-mean $\sigma^2$-variance random variable $Z$, $\probP[\mid\! Z\!\mid \leq \sigma] = \frac{2}{3}$.
+		\item If a particular student has a score greater than $80$, what is the probability that the student is from category $1$? That is, compute $\probP[\text{class} = 1 \mid X \geq 80]$. (Use the same approximation as in the previous part.)
+	\end{question}
+\end{question}
+\end{document}
